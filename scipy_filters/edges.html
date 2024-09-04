@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Edges — SciPy Filters for QGIS &#8212; SciPyFilters 1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Enhance — SciPy Filters for QGIS" href="enhance.html" />
+    <link rel="prev" title="Convolution — SciPy Filters for QGIS" href="convolution.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="enhance.html" title="Enhance — SciPy Filters for QGIS"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="convolution.html" title="Convolution — SciPy Filters for QGIS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" accesskey="U">Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Edges — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="edges-scipy-filters-for-qgis">
+<h1>Edges — SciPy Filters for QGIS<a class="headerlink" href="#edges-scipy-filters-for-qgis" title="Permalink to this headline">¶</a></h1>
+<section id="gaussian-gradient-magnitude">
+<h2>Gaussian gradient magnitude<a class="headerlink" href="#gaussian-gradient-magnitude" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_gaussian_algorithm.SciPyGaussianGradientMagnitudeAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_gaussian_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyGaussianGradientMagnitudeAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_gaussian_algorithm.html#SciPyGaussianGradientMagnitudeAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_gaussian_algorithm.SciPyGaussianGradientMagnitudeAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gradient magnitude using Gaussian derivatives. 
+Calculated with gaussian_gradient_magnitude from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Sigma</strong> Standard deviation of the gaussian filter.
+<strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).</p>
+<p><strong>Dtype</strong> Data type of output. Beware of clipping 
+and potential overflow errors if min/max of output does 
+not fit. Default is Float32.</p>
+</dd></dl>
+
+</section>
+<section id="gaussian-laplace">
+<h2>Gaussian Laplace<a class="headerlink" href="#gaussian-laplace" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_gaussian_algorithm.SciPyGaussianLaplaceAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_gaussian_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyGaussianLaplaceAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_gaussian_algorithm.html#SciPyGaussianLaplaceAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_gaussian_algorithm.SciPyGaussianLaplaceAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Laplace filter using Gaussian second derivatives</p>
+<p>Calculated with gaussian_laplace from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Sigma</strong> Standard deviation of the gaussian filter.
+<strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).</p>
+<p><strong>Dtype</strong> Data type of output. Beware of clipping 
+and potential overflow errors if min/max of output does 
+not fit. Default is Float32.</p>
+</dd></dl>
+
+</section>
+<section id="gradient-filter">
+<h2>Gradient filter<a class="headerlink" href="#gradient-filter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.gradient_algorithm.SciPyGradientAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.gradient_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyGradientAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/gradient_algorithm.html#SciPyGradientAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.gradient_algorithm.SciPyGradientAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gradient filter. Returns gradient along x-axis, y-axis or the maximum gradient. Calculated with 
+<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.gradient.html">numpy.gradient</a>.</p>
+<p>See also Pixel Gradient in Pixel Based Filters.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Axis</strong> Calculate along x-axis, y-axis or both (returning the hypotenuse of both vectors.)</p>
+<p><strong>Return absolute values</strong> Gradient is calculated left to right along x-axis 
+or top to bottom of the raster, eventually returning negative values. If checked, 
+the absolute values are returned.</p>
+</dd></dl>
+
+</section>
+<section id="laplace-filter">
+<h2>Laplace filter<a class="headerlink" href="#laplace-filter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_edge_algorithms.SciPyLaplaceAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_edge_algorithms.</span></span><span class="sig-name descname"><span class="pre">SciPyLaplaceAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_edge_algorithms.html#SciPyLaplaceAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_edge_algorithms.SciPyLaplaceAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multidimensional Laplace filter based on approximate second derivatives.
+Calculated with gaussian_laplace from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).</p>
+<p><strong>Dtype</strong> Data type of output. Beware of clipping 
+and potential overflow errors if min/max of output does 
+not fit. Default is Float32.</p>
+</dd></dl>
+
+</section>
+<section id="prewitt-filter">
+<h2>Prewitt filter<a class="headerlink" href="#prewitt-filter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_edge_algorithms.SciPyPrewittAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_edge_algorithms.</span></span><span class="sig-name descname"><span class="pre">SciPyPrewittAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_edge_algorithms.html#SciPyPrewittAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_edge_algorithms.SciPyPrewittAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prewitt filter.
+Calculated with prewitt from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Axis</strong>: Find horizontal or vertical edges or in case 
+of 3D edges across the bands. Magnitude: all axes combined 
+with hypothenuse of the triangle.
+<strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).</p>
+<p><strong>Dtype</strong> Data type of output. Beware of clipping 
+and potential overflow errors if min/max of output does 
+not fit. Default is Float32.</p>
+</dd></dl>
+
+</section>
+<section id="sobel-filter">
+<h2>Sobel filter<a class="headerlink" href="#sobel-filter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_edge_algorithms.SciPySobelAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_edge_algorithms.</span></span><span class="sig-name descname"><span class="pre">SciPySobelAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_edge_algorithms.html#SciPySobelAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_edge_algorithms.SciPySobelAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sobel filter</p>
+<p>Calculated with sobel from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Axis</strong>: Find horizontal or vertical edges or in case 
+of 3D edges across the bands. Magnitude: all axes combined 
+with hypothenuse of the triangle.
+<strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).</p>
+<p><strong>Dtype</strong> Data type of output. Beware of clipping 
+and potential overflow errors if min/max of output does 
+not fit. Default is Float32.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Edges — SciPy Filters for QGIS</a><ul>
+<li><a class="reference internal" href="#gaussian-gradient-magnitude">Gaussian gradient magnitude</a></li>
+<li><a class="reference internal" href="#gaussian-laplace">Gaussian Laplace</a></li>
+<li><a class="reference internal" href="#gradient-filter">Gradient filter</a></li>
+<li><a class="reference internal" href="#laplace-filter">Laplace filter</a></li>
+<li><a class="reference internal" href="#prewitt-filter">Prewitt filter</a></li>
+<li><a class="reference internal" href="#sobel-filter">Sobel filter</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="convolution.html"
+                        title="previous chapter">Convolution — SciPy Filters for QGIS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="enhance.html"
+                        title="next chapter">Enhance — SciPy Filters for QGIS</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/edges.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="enhance.html" title="Enhance — SciPy Filters for QGIS"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="convolution.html" title="Convolution — SciPy Filters for QGIS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" >Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Edges — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Florian Neukirchen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+  </body>
+</html>
