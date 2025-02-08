@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>helpers.window &#8212; SciPyFilters 1.5
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/classic.css" />
+    
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">helpers.window</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for helpers.window</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">/***************************************************************************</span>
+<span class="sd"> SciPyFilters</span>
+<span class="sd">                                 A QGIS plugin</span>
+<span class="sd"> Filter collection implemented with SciPy</span>
+<span class="sd">                              -------------------</span>
+<span class="sd">        begin                : 2024-03-26</span>
+<span class="sd">        copyright            : (C) 2024 by Florian Neukirchen</span>
+<span class="sd">        email                : mail@riannek.de</span>
+<span class="sd"> ***************************************************************************/</span>
+
+<span class="sd">/***************************************************************************</span>
+<span class="sd"> *                                                                         *</span>
+<span class="sd"> *   This program is free software; you can redistribute it and/or modify  *</span>
+<span class="sd"> *   it under the terms of the GNU General Public License as published by  *</span>
+<span class="sd"> *   the Free Software Foundation; either version 2 of the License, or     *</span>
+<span class="sd"> *   (at your option) any later version.                                   *</span>
+<span class="sd"> *                                                                         *</span>
+<span class="sd"> ***************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Florian Neukirchen&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2024-03-26&#39;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s1">&#39;(C) 2024 by Florian Neukirchen&#39;</span>
+
+<span class="c1"># This will get replaced with a git SHA1 when you do a git archive</span>
+
+<span class="n">__revision__</span> <span class="o">=</span> <span class="s1">&#39;$Format:%H$&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">DEFAULTWINDOWSIZE</span> <span class="o">=</span> <span class="mi">5000</span> <span class="c1"># Large is faster, but must be small enought for RAM</span>
+<span class="n">MAXSIZE</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1"># Max size in Mpixels for algs that can&#39;t use a window </span>
+
+<div class="viewcode-block" id="RasterWindow"><a class="viewcode-back" href="../../rasterwindow.html#helpers.RasterWindow">[docs]</a><span class="k">class</span> <span class="nc">RasterWindow</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Window for reading/writing a subset of a raster into/from a numpy array.</span>
+
+<span class="sd">    Helper class for a window (tile) of a large raster to be used for processing</span>
+<span class="sd">    in a moving window. The window can have a margin, for algorithms that consider</span>
+<span class="sd">    the neighborhood of a pixel as well. For example, a 3x3 kernel needs a margin of 1.</span>
+
+<span class="sd">    The windows (RasterWindow instances) can be generated with :py:func:`.get_windows`.</span>
+<span class="sd">     </span>
+<span class="sd">    Does not contain any data, only the parameters to read/write a subset of the raster with `GDAL &lt;https://gdal.org/en/latest/&gt;`_</span>
+<span class="sd">    and to slice off the margin before writing data to the output dataset.</span>
+<span class="sd">    </span>
+<span class="sd">    To read and write the data with `GDAL &lt;https://gdal.org/en/latest/&gt;`_ use the :py:attr:`.gdalin` </span>
+<span class="sd">    and :py:attr:`.gdalout` properties. Any margin must be removed from the numpy array before writing</span>
+<span class="sd">    the data back to the raster, see :py:meth:`.getslice`.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        # Input and output datasets with gdal</span>
+<span class="sd">        ds = gdal.Open(&quot;raster.tif&quot;) </span>
+<span class="sd">        driver = gdal.GetDriverByName(&quot;GTiff&quot;)</span>
+<span class="sd">        dst_ds = driver.CreateCopy(dst_filename, src_ds, strict=0)</span>
+
+<span class="sd">        # Get windows</span>
+<span class="sd">        windows = get_windows(ds.RasterXSize, ds.RasterYSize, windowsize=windowsize, margin=margin)</span>
+
+<span class="sd">        # Loop over windows</span>
+<span class="sd">        band = 1</span>
+<span class="sd">        for win in windows:</span>
+<span class="sd">            a = ds.GetRasterBand(band).ReadAsArray(*win.gdalin) # In this case a is a 2D numpy array</span>
+<span class="sd">            # Your calculation with numpy array a</span>
+<span class="sd">            a = a[win.getslice(2)] # Slice off the margin (2D array)</span>
+<span class="sd">            dst_ds.GetRasterBand(band).WriteArray(filtered, *win.gdalout)</span>
+
+<span class="sd">        # Close datasets (flushes data to file)</span>
+<span class="sd">        ds = None</span>
+<span class="sd">        dst_ds = None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="n">xoff</span><span class="p">,</span> <span class="n">yoff</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rasterXSize</span> <span class="o">=</span> <span class="n">rasterXSize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rasterYSize</span> <span class="o">=</span> <span class="n">rasterYSize</span>
+
+        <span class="c1"># Without margin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span> <span class="o">=</span> <span class="n">xoff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span> <span class="o">=</span> <span class="n">yoff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xsize</span> <span class="o">=</span> <span class="n">xsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ysize</span> <span class="o">=</span> <span class="n">ysize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xshift</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yshift</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">=</span> <span class="n">margin</span>
+
+
+        <span class="c1"># With margin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_xsize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xsize</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_ysize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ysize</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_xoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_yoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+
+
+        <span class="c1"># Shift the window if on edge</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_xoff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xshift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">m_xoff</span> <span class="o">=</span> <span class="mi">0</span>
+    
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_yoff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yshift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">m_yoff</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_xoff</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_xsize</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rasterXSize</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xshift</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">m_xoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rasterXSize</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_xsize</span>
+    
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_yoff</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_ysize</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rasterYSize</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yshift</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">m_yoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rasterYSize</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_ysize</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gdalin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters for `GDAL &lt;https://gdal.org/en/latest/&gt;`_ ReadAsArray() method.</span>
+
+<span class="sd">        Tuple with x_offset, y_offset, x_size, y_size (including the margins of the window). </span>
+<span class="sd">        The tuple can be unpacked with * to be used as parameters with ReadAsArray.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            a = ds.GetRasterBand(band).ReadAsArray(*win.gdalin)</span>
+
+<span class="sd">        :return: tuple with x_offset, y_offset, x_size, y_size </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_xoff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_yoff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_xsize</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_ysize</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gdalout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters for `GDAL &lt;https://gdal.org/en/latest/&gt;`_ WriteArray() method.</span>
+
+<span class="sd">        Tuple with x_offset, y_offset (excluding the margins of the window).</span>
+<span class="sd">        The tuple can be unpacked with * to be used as parameters with the `GDAL &lt;https://gdal.org/en/latest/&gt;`_ </span>
+<span class="sd">        WriteArray() method.</span>
+<span class="sd">        Margins must from the numpy array before writing to the output dataset, see :py:meth:`.get_slice`.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            a = a[win.getslice()] # Slice off the margin</span>
+<span class="sd">            dst_ds.WriteArray(a, *win.gdalout)</span>
+
+<span class="sd">        :return: tuple with x_offset, y_offset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span>
+    
+    <span class="c1"># Only for debugging:</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gdalin_no_margin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters for `GDAL &lt;https://gdal.org/en/latest/&gt;`_ ReadAsArray() method to read data without margin.</span>
+
+<span class="sd">        Only for debugging, use :py:attr:`.gdalin` instead.</span>
+
+<span class="sd">        :return: tuple with x_offset, y_offset, x_size, y_size including the margins </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xsize</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ysize</span>
+    
+<div class="viewcode-block" id="RasterWindow.getslice"><a class="viewcode-back" href="../../rasterwindow.html#helpers.RasterWindow.getslice">[docs]</a>    <span class="k">def</span> <span class="nf">getslice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get tuple of :py:obj:`slice` objects to be used directly with numpy to remove the margin of the window</span>
+<span class="sd">        before writing the data into the output dataset.</span>
+
+<span class="sd">        Example::</span>
+<span class="sd">            </span>
+<span class="sd">                a = a[win.getslice()] # Slice off the margin of a 3D numpy array</span>
+
+<span class="sd">        :param ndim: number of dimensions of the numpy array; either 2 or 3, default is 3</span>
+<span class="sd">        :type ndim: int, optional</span>
+<span class="sd">        :return: tuple of slice objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ystop</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">yshift</span><span class="p">)</span>
+        <span class="n">xstop</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">xshift</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ystop</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">ystop</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">xstop</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">xstop</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+        <span class="n">ys</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">yshift</span><span class="p">,</span> <span class="n">ystop</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xshift</span><span class="p">,</span> <span class="n">xstop</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="n">xs</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">ys</span><span class="p">,</span> <span class="n">xs</span><span class="p">)</span></div>
+    
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;RasterWindow&gt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">xoff</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">yoff</span><span class="si">}</span><span class="s2"> size </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">xsize</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ysize</span><span class="si">}</span><span class="s2"> margin </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">margin</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="RasterWindow.get_a_off"><a class="viewcode-back" href="../../rasterwindow.html#helpers.RasterWindow.get_a_off">[docs]</a>    <span class="k">def</span> <span class="nf">get_a_off</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the x and y offsets with and without margins.</span>
+
+<span class="sd">        Primarily for debugging.</span>
+
+<span class="sd">        :return: tuple with x_offset, y_offset, x_offset_no_margin, y_offset_no_margin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_xoff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_yoff</span></div></div>
+
+
+
+<div class="viewcode-block" id="get_windows"><a class="viewcode-back" href="../../rasterwindow.html#helpers.get_windows">[docs]</a><span class="k">def</span> <span class="nf">get_windows</span><span class="p">(</span><span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="n">windowsize</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generator yielding :py:class:`RasterWindow` instances, dividing a large raster into smaller</span>
+<span class="sd">    windows (tiles).</span>
+
+<span class="sd">    The generated window objects do not contain the data, </span>
+<span class="sd">    only the pixel indices and sizes that are used internally to read and write the data </span>
+<span class="sd">    with `GDAL &lt;https://gdal.org/en/latest/&gt;`_.</span>
+
+<span class="sd">    Note that numpy, scipy etc. are very performant on large arrays. It is best to use a </span>
+<span class="sd">    large windowsize or even the whole raster, as long as enough memory is avaible.</span>
+<span class="sd">    The windows can have a margin, for algorthims that consider the neighborhood of a pixel as well.</span>
+<span class="sd">    For example, a 3x3 kernel needs a margin of 1.</span>
+
+<span class="sd">    If you need the number of windows (e.g. for a progress bar), use :py:func:`.number_of_windows`.</span>
+
+<span class="sd">    :param rasterXSize: number of pixels in x direction of the raster</span>
+<span class="sd">    :type rasterXSize: int</span>
+<span class="sd">    :param rasterYSize: int, number of pixels in y direction of the raster</span>
+<span class="sd">    :type rasterYSize: int</span>
+<span class="sd">    :param windowsize: Size of the windows in x and y direction in pixels, default is 5000</span>
+<span class="sd">    :type windowsize: int, optional</span>
+<span class="sd">    :param margin: Size of the margin in pixels, default is 0</span>
+<span class="sd">    :type margin: int, optional</span>
+
+<span class="sd">    :return: :py:class:`RasterWindow` instances</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">windowsize</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># get 1 window with full raster </span>
+        <span class="k">yield</span> <span class="n">RasterWindow</span><span class="p">(</span><span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">))</span>  <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">windowsize</span><span class="p">):</span>
+        <span class="c1"># print(&quot;only one&quot;)</span>
+        <span class="c1"># get 1 window with full raster </span>
+        <span class="k">yield</span> <span class="n">RasterWindow</span><span class="p">(</span><span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span>
+    
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rasterXSize</span><span class="p">,</span> <span class="n">windowsize</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">windowsize</span> <span class="o">&gt;</span> <span class="n">rasterXSize</span><span class="p">:</span>
+            <span class="n">xsize</span> <span class="o">=</span> <span class="n">rasterXSize</span> <span class="o">-</span> <span class="n">x</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xsize</span> <span class="o">=</span> <span class="n">windowsize</span>
+
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="n">windowsize</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">y</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">windowsize</span> <span class="o">&gt;</span> <span class="n">rasterYSize</span><span class="p">:</span>
+                <span class="n">ysize</span> <span class="o">=</span> <span class="n">rasterYSize</span> <span class="o">-</span> <span class="n">y</span> 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ysize</span> <span class="o">=</span> <span class="n">windowsize</span>
+                
+            <span class="k">if</span> <span class="p">(</span><span class="n">xsize</span> <span class="o">&gt;</span> <span class="n">windowsize</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ysize</span> <span class="o">&gt;</span> <span class="n">windowsize</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">RasterWindow</span><span class="p">(</span><span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">margin</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="number_of_windows"><a class="viewcode-back" href="../../rasterwindow.html#helpers.number_of_windows">[docs]</a><span class="k">def</span> <span class="nf">number_of_windows</span><span class="p">(</span><span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">,</span> <span class="n">windowsize</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the number of windows that would be created with :py:func:`.get_windows`. </span>
+<span class="sd">    </span>
+<span class="sd">    To be used for progress bar, etc.</span>
+
+<span class="sd">    :param rasterXSize: number of pixels in x direction of the raster</span>
+<span class="sd">    :type rasterXSize: int</span>
+<span class="sd">    :param rasterYSize: number of pixels in y direction of the raster</span>
+<span class="sd">    :type rasterYSize: int</span>
+<span class="sd">    :param windowsize: Size of the windows in x and y direction in pixels</span>
+<span class="sd">    :type windowsize: int</span>
+<span class="sd">    :return: int, number of windows</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">windowsize</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">rasterXSize</span><span class="p">,</span> <span class="n">rasterYSize</span><span class="p">))</span>  <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">windowsize</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">rasterXSize</span> <span class="o">/</span> <span class="n">windowsize</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">rasterYSize</span> <span class="o">/</span> <span class="n">windowsize</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">rasterXSize</span> <span class="o">%</span> <span class="n">windowsize</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">windowsize</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">rasterYSize</span> <span class="o">%</span> <span class="n">windowsize</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">windowsize</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span></div>
+    
+
+<div class="viewcode-block" id="wrap_margin"><a class="viewcode-back" href="../../rasterwindow.html#helpers.wrap_margin">[docs]</a><span class="k">def</span> <span class="nf">wrap_margin</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">win</span><span class="p">:</span> <span class="n">RasterWindow</span><span class="p">,</span> <span class="n">band</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fill margin of numpy array to enable SciPy filters with mode wrap.</span>
+
+<span class="sd">    Fills the margin of a numpy array that was read from a :py:class:`RasterWindow` that is situated on the edge</span>
+<span class="sd">    of the original raster with the data of the far side of the raster.</span>
+<span class="sd">    This makes :code:`mode=&quot;wrap&quot;`, offered by some `SciPy &lt;https://scipy.org/&gt;`_ filters, possible.</span>
+<span class="sd">    The wrapping itself is done by SciPy, this function only fills the</span>
+<span class="sd">    data needed for wrapping to work.</span>
+
+<span class="sd">    </span>
+<span class="sd">    Example::</span>
+
+<span class="sd">        import gdal</span>
+<span class="sd">        from scipy import ndimage</span>
+<span class="sd">        from scipy_filters.helpers.window import get_windows, wrap_margin</span>
+
+<span class="sd">        ds = gdal.Open(&quot;raster.tif&quot;) </span>
+<span class="sd">        driver = gdal.GetDriverByName(&quot;GTiff&quot;)</span>
+<span class="sd">        dst_ds = driver.CreateCopy(dst_filename, src_ds, strict=0)</span>
+
+<span class="sd">        windows = get_windows(ds.RasterXSize, ds.RasterYSize, windowsize=2000, margin=2)</span>
+
+<span class="sd">        for band in range(1, ds.RasterCount + 1):</span>
+<span class="sd">            for win in windows:</span>
+<span class="sd">                a = ds.GetRasterBand(band).ReadAsArray(*win.gdalin) </span>
+<span class="sd">                wrap_margin(a, ds, win, band=band)</span>
+<span class="sd">                # Your calculation, for example median filter</span>
+<span class="sd">                a = ndimage.median_filter(a, size=5, mode=&quot;wrap&quot;)</span>
+<span class="sd">                a = a[win.getslice(2)] # Slice off the margin of the 2D array</span>
+<span class="sd">                dst_ds.GetRasterBand(band).WriteArray(filtered, *win.gdalout)</span>
+
+<span class="sd">    :param a: Numpy array with the data of the window</span>
+<span class="sd">    :param dataset: gdal dataset of the input raster</span>
+<span class="sd">    :param win: RasterWindow</span>
+<span class="sd">    :param band: int | None. Number of band (and using a 2D array), None for all bands (3D array if more than 1 band exists).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rasterXSize</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">RasterXSize</span>
+    <span class="n">rasterYSize</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">RasterYSize</span>
+    <span class="c1"># Shortcut: Nothing to do if we are not on edge</span>
+    <span class="k">if</span> <span class="n">win</span><span class="o">.</span><span class="n">xshift</span> <span class="o">==</span> <span class="n">win</span><span class="o">.</span><span class="n">yshift</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    
+    <span class="c1"># No wrapping needed if window is full raster</span>
+    <span class="k">if</span> <span class="n">win</span><span class="o">.</span><span class="n">xsize</span> <span class="o">==</span> <span class="n">win</span><span class="o">.</span><span class="n">rasterXSize</span><span class="p">:</span>
+        <span class="k">return</span>
+    
+    <span class="c1"># If band, get the array of the band, otherwise of the complete ds</span>
+    <span class="k">if</span> <span class="n">band</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="n">band</span><span class="p">)</span>
+
+    <span class="c1"># Prepare slices (for tile array) and offsets (for full dataset)</span>
+        
+    <span class="n">n_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Small sides</span>
+    <span class="k">if</span> <span class="n">win</span><span class="o">.</span><span class="n">xshift</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">x_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">-</span><span class="n">win</span><span class="o">.</span><span class="n">margin</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">xoff</span> <span class="o">=</span> <span class="n">rasterXSize</span> <span class="o">-</span> <span class="n">win</span><span class="o">.</span><span class="n">margin</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">margin</span><span class="p">)</span>
+        <span class="n">xoff</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">win</span><span class="o">.</span><span class="n">yshift</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">y_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">-</span><span class="n">win</span><span class="o">.</span><span class="n">margin</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">yoff</span> <span class="o">=</span> <span class="n">rasterYSize</span> <span class="o">-</span> <span class="n">win</span><span class="o">.</span><span class="n">margin</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">margin</span><span class="p">)</span>
+        <span class="n">yoff</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Long sides</span>
+    <span class="n">x_long_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">m_xsize</span><span class="p">)</span>
+    <span class="n">y_long_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">m_ysize</span><span class="p">)</span>
+
+    <span class="c1"># Do the wrapping</span>
+        
+    <span class="c1"># left or right side    </span>
+    <span class="k">if</span> <span class="n">win</span><span class="o">.</span><span class="n">xshift</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">slicer</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_slice</span><span class="p">,</span> <span class="n">y_long_slice</span><span class="p">,</span> <span class="n">x_slice</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">slicer</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_long_slice</span><span class="p">,</span> <span class="n">x_slice</span><span class="p">)</span>
+        <span class="n">a</span><span class="p">[</span><span class="n">slicer</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">(</span><span class="n">xoff</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">m_yoff</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">margin</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">m_ysize</span><span class="p">)</span>
+
+    <span class="c1"># upper or lower side</span>
+    <span class="k">if</span> <span class="n">win</span><span class="o">.</span><span class="n">yshift</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">slicer</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_slice</span><span class="p">,</span> <span class="n">y_slice</span><span class="p">,</span> <span class="n">x_long_slice</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">slicer</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_slice</span><span class="p">,</span> <span class="n">x_long_slice</span><span class="p">)</span>
+
+        <span class="n">a</span><span class="p">[</span><span class="n">slicer</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">(</span><span class="n">win</span><span class="o">.</span><span class="n">m_xoff</span><span class="p">,</span> <span class="n">yoff</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">m_xsize</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">margin</span><span class="p">)</span>    
+    
+    <span class="c1"># corners</span>
+    <span class="k">if</span> <span class="n">win</span><span class="o">.</span><span class="n">yshift</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">win</span><span class="o">.</span><span class="n">xshift</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">slicer</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_slice</span><span class="p">,</span> <span class="n">y_slice</span><span class="p">,</span> <span class="n">x_slice</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">slicer</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_slice</span><span class="p">,</span> <span class="n">x_slice</span><span class="p">)</span>
+
+        <span class="n">a</span><span class="p">[</span><span class="n">slicer</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">(</span><span class="n">xoff</span><span class="p">,</span> <span class="n">yoff</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">margin</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">margin</span><span class="p">)</span>     </div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">helpers.window</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Florian Neukirchen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>No Data filters — SciPy Filters for QGIS &#8212; SciPyFilters 1.5
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Principal Component Analysis (PCA) — SciPy Filters for QGIS" href="pca.html" />
+    <link rel="prev" title="Morphological filters — SciPy Filters for QGIS" href="morphological.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pca.html" title="Principal Component Analysis (PCA) — SciPy Filters for QGIS"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="morphological.html" title="Morphological filters — SciPy Filters for QGIS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" accesskey="U">Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">No Data filters — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="no-data-filters-scipy-filters-for-qgis">
+<h1>No Data filters — SciPy Filters for QGIS<a class="headerlink" href="#no-data-filters-scipy-filters-for-qgis" title="Permalink to this headline">¶</a></h1>
+<p>In QGIS, filters normally ignore No Data cells automatically. However, this is not always easy, especially if a filter examines neighboring cells and these contain No Data. What happens depends on the implementation, but is problematic in both cases.</p>
+<p>In raster layers, “No Data” is coded with a specific number, e.g. -9999. If, for example, the mean value within a 3✕3 neighborhood is calculated, the result in the vicinity of each No Data cell is of course nonsense. If you replace the -9999 (in Numpy) with NaN (which is only possible with float), the respective cell will become No Data as well, because a calculation is not possible. The No Data cells infect their neighbors, so to speak.</p>
+<p>One possibility is to fill the no-data cells with any reasonably meaningful value. QGIS itself and GDAL offer various ways of doing this, but these have the disadvantage that only one single band is processed at a time. You would therefore have to process each band individually and then merge the results back into one layer.</p>
+<p>The QGIS plugin Scipy Filters allows to fill no-data cells in all bands, with:</p>
+<ul class="simple">
+<li><p>Null</p></li>
+<li><p>A user-defined constant</p></li>
+<li><p>The mean value of the band (estimated by GDAL or calculated exactly)</p></li>
+<li><p>The minimum value of the data type</p></li>
+<li><p>The maximum value of the data type</p></li>
+<li><p>The central value of the data type</p></li>
+</ul>
+<p>To track which cells were originally “No Data”, the plugin can also create a No Data mask (binary raster with 0 and 1) and apply this mask to a raster layer, i.e. set the corresponding cells back to No Data.</p>
+<section id="apply-no-data-mask">
+<h2>Apply no data mask<a class="headerlink" href="#apply-no-data-mask" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_nodata_algorithm.SciPyFilterApplyNoDataMask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_nodata_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyFilterApplyNoDataMask</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_nodata_algorithm.html#SciPyFilterApplyNoDataMask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_nodata_algorithm.SciPyFilterApplyNoDataMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply no data mask to raster layer</p>
+<p>Set all cells where the mask layer is not 0 to no data.</p>
+<p><strong>No data mask</strong> Raster layer, either with 1 band or same number of bands as input layer. 
+Must have same projection, geotransform and width / height as input layer. 
+Every cell with 0 in the mask layer is considered to be a data cell, 
+with 1 (or any non zero number) as no data value.</p>
+<p><strong>No data value</strong> Value to be used as proxy for no data. Must be in the range 
+of the data type. If data type is integer, decimal places are truncated.</p>
+<p><strong>Change</strong> Optionally add or substract a value from each cell where the value is 
+equal to the no data value, to avoid to set the cell to no data. 
+If data type is integer, decimal places are truncated.</p>
+</dd></dl>
+
+</section>
+<section id="fill-no-data">
+<h2>Fill no data<a class="headerlink" href="#fill-no-data" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_nodata_algorithm.SciPyFilterFillNoData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_nodata_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyFilterFillNoData</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_nodata_algorithm.html#SciPyFilterFillNoData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_nodata_algorithm.SciPyFilterFillNoData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill no data cells (all bands)</p>
+<p><strong>Mode</strong> Fill with 0, fill with value, fill with approximate band mean,     fill with exact band mean, fill with minimum of dtype range,     fill with maximum of dtype range, fill with central value of dtype range.</p>
+<p><strong>Value</strong> Used for mode <em>fill with value</em></p>
+</dd></dl>
+
+</section>
+<section id="no-data-mask">
+<h2>No data mask<a class="headerlink" href="#no-data-mask" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_nodata_algorithm.SciPyFilterNoDataMask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_nodata_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyFilterNoDataMask</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_nodata_algorithm.html#SciPyFilterNoDataMask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_nodata_algorithm.SciPyFilterNoDataMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return mask of no data value, with 1 for no data, 0 for data.</p>
+<p><strong>Seperate</strong> Return seperate mask for each band. Otherwise, 
+return one band, with value 1 if any band has no data.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">No Data filters — SciPy Filters for QGIS</a><ul>
+<li><a class="reference internal" href="#apply-no-data-mask">Apply no data mask</a></li>
+<li><a class="reference internal" href="#fill-no-data">Fill no data</a></li>
+<li><a class="reference internal" href="#no-data-mask">No data mask</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="morphological.html"
+                        title="previous chapter">Morphological filters — SciPy Filters for QGIS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pca.html"
+                        title="next chapter">Principal Component Analysis (PCA) — SciPy Filters for QGIS</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/nodata.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pca.html" title="Principal Component Analysis (PCA) — SciPy Filters for QGIS"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="morphological.html" title="Morphological filters — SciPy Filters for QGIS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" >Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">No Data filters — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Florian Neukirchen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+  </body>
+</html>

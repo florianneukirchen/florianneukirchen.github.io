@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Processing Algorithms &#8212; SciPyFilters 1.5
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Blur — SciPy Filters for QGIS" href="blur.html" />
+    <link rel="prev" title="Getting started" href="start.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="blur.html" title="Blur — SciPy Filters for QGIS"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="start.html" title="Getting started"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Processing Algorithms</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="processing-algorithms">
+<h1>Processing Algorithms<a class="headerlink" href="#processing-algorithms" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="blur.html">Blur — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="blur.html#fourier-ellipsoid">Fourier Ellipsoid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="blur.html#fourier-gaussian">Fourier Gaussian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="blur.html#fourier-uniform">Fourier uniform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="blur.html#gaussian-filter">Gaussian filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="blur.html#uniform-filter">Uniform filter</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="convolution.html">Convolution — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="convolution.html#convolve">Convolve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convolution.html#correlate">Correlate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convolution.html#fft-convolve">FFT Convolve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convolution.html#fft-correlate">FFT Correlate</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="edges.html">Edges — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="edges.html#gaussian-gradient-magnitude">Gaussian gradient magnitude</a></li>
+<li class="toctree-l2"><a class="reference internal" href="edges.html#gaussian-laplace">Gaussian Laplace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="edges.html#gradient-filter">Gradient filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="edges.html#laplace-filter">Laplace filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="edges.html#prewitt-filter">Prewitt filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="edges.html#sobel-filter">Sobel filter</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="enhance.html">Enhance — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="enhance.html#unsharp-mask">Unsharp mask</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enhance.html#wiener-filter">Wiener filter</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="morphological.html">Morphological filters — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="morphological.html#binary-dilation-erosion-closing-and-opening">Binary dilation, erosion, closing, and opening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="morphological.html#grey-dilation-erosion-closing-and-opening">Grey dilation, erosion, closing, and opening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="morphological.html#fill-holes">Fill holes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="morphological.html#hit-or-miss">Hit or miss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="morphological.html#tophat-or-morphological-gradient-laplace">Tophat or morphological gradient/Laplace</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nodata.html">No Data filters — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nodata.html#apply-no-data-mask">Apply no data mask</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nodata.html#fill-no-data">Fill no data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nodata.html#no-data-mask">No data mask</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis (PCA) — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pca.html#principal-component-analysis-pca">Principal Component Analysis (PCA)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pca.html#keep-only-n-components">Keep only n components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pca.html#transform-from-principal-components">Transform from principal components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pca.html#transform-to-principal-components">Transform to principal components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pca.html#biplot">Biplot</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pixelfilters.html">Pixel based filters — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#complete-pixel-statistics">Complete pixel statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#difference-band-to-band">Difference band to band</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#pixel-gradient-filter">Pixel gradient filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#pixel-maximum-filter">Pixel maximum filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#pixel-mean-filter">Pixel mean filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#pixel-median-filter">Pixel median filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#pixel-minimum-filter">Pixel minimum filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#pixel-range-filter">Pixel range filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#pixel-standard-deviation">Pixel standard deviation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pixelfilters.html#pixel-variance">Pixel variance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="statistical.html">Statistical Filters — SciPy Filters for QGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="statistical.html#estimate-local-standard-deviation">Estimate local standard deviation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistical.html#estimate-local-variance">Estimate local variance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistical.html#local-range-difference-of-min-and-max">Local range (difference of min and max)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistical.html#maximum-filter">Maximum filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistical.html#median-filter">Median filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistical.html#minimum-filter">Minimum filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistical.html#percentile-filter">Percentile filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistical.html#rank-filter">Rank filter</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="start.html"
+                        title="previous chapter">Getting started</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="blur.html"
+                        title="next chapter">Blur — SciPy Filters for QGIS</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/algorithms.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="blur.html" title="Blur — SciPy Filters for QGIS"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="start.html" title="Getting started"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Processing Algorithms</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Florian Neukirchen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+  </body>
+</html>

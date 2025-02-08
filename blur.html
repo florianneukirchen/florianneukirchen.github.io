@@ -1,0 +1,275 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Blur — SciPy Filters for QGIS &#8212; SciPyFilters 1.5
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Convolution — SciPy Filters for QGIS" href="convolution.html" />
+    <link rel="prev" title="Processing Algorithms" href="algorithms.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="convolution.html" title="Convolution — SciPy Filters for QGIS"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="algorithms.html" title="Processing Algorithms"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" accesskey="U">Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Blur — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="blur-scipy-filters-for-qgis">
+<h1>Blur — SciPy Filters for QGIS<a class="headerlink" href="#blur-scipy-filters-for-qgis" title="Permalink to this headline">¶</a></h1>
+<section id="fourier-ellipsoid">
+<h2>Fourier Ellipsoid<a class="headerlink" href="#fourier-ellipsoid" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_fourier_algorithm.SciPyFourierEllipsoidAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_fourier_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyFourierEllipsoidAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_fourier_algorithm.html#SciPyFourierEllipsoidAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_fourier_algorithm.SciPyFourierEllipsoidAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ellipsoid fourier filter</p>
+<p>Ellipsoidal box filter calculated by multiplication 
+with a circular or ellipsoidal kernel in the frequency domain.</p>
+<p>The input band is transformed with fast fourier transform (FFT) 
+using fft2 (for 2D) or fftn (for 3D) from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/fft.html">scipy.fft</a>.
+The multiplication with the fourier transform of a gaussian kernel 
+is calculated with fourier_ellipsoid from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.
+The product is transformed back with ifft2 or ifftn, respectively. 
+Only the real part of the resulting complex 
+numbers is returned.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Size</strong> Size of the circular or ellipsoidal box.</p>
+</dd></dl>
+
+</section>
+<section id="fourier-gaussian">
+<h2>Fourier Gaussian<a class="headerlink" href="#fourier-gaussian" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_fourier_algorithm.SciPyFourierGaussianAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_fourier_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyFourierGaussianAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_fourier_algorithm.html#SciPyFourierGaussianAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_fourier_algorithm.SciPyFourierGaussianAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gaussian fourier filter</p>
+<p>Gaussian filter calculated by multiplication in the frequency domain. 
+This is faster with large kernels (large sigma).</p>
+<p>The input band is transformed with fast fourier transform (FFT) 
+using fft2 (for 2D) or fftn (for 3D) from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/fft.html">scipy.fft</a>.
+The multiplication with the fourier transform of a gaussian kernel 
+is calculated with fourier_gaussian from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>. 
+The product is transformed back with ifft2 or ifftn, respectively. 
+Only the real part of the resulting complex 
+numbers is returned.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Sigma</strong> Standard deviation of the gaussian filter.</p>
+</dd></dl>
+
+</section>
+<section id="fourier-uniform">
+<h2>Fourier uniform<a class="headerlink" href="#fourier-uniform" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_fourier_algorithm.SciPyFourierUniformAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_fourier_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyFourierUniformAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_fourier_algorithm.html#SciPyFourierUniformAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_fourier_algorithm.SciPyFourierUniformAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fourier uniform (i.e. mean) filter</p>
+<p>Uniform filter calculated by multiplication 
+with a box kernel in the frequency domain.</p>
+<p>The input band is transformed with fast fourier transform (FFT) 
+using fft2 (for 2D) or fftn (for 3D) from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/fft.html">scipy.fft</a>.
+The multiplication with the fourier transform of a gaussian kernel 
+is calculated with fourier_uniform from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.
+The product is transformed back with ifft2 or ifftn, respectively. 
+Only the real part of the resulting complex 
+numbers is returned.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Size</strong> Size of the box.</p>
+</dd></dl>
+
+</section>
+<section id="gaussian-filter">
+<h2>Gaussian filter<a class="headerlink" href="#gaussian-filter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_gaussian_algorithm.SciPyGaussianAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_gaussian_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyGaussianAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_gaussian_algorithm.html#SciPyGaussianAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_gaussian_algorithm.SciPyGaussianAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gaussian filter (blur with a gaussian kernel)</p>
+<p>Calculated with gaussian_filter from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Sigma</strong> Standard deviation of a gaussian kernel.</p>
+<p><strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).</p>
+<p><strong>Order</strong> Optionally use first, second or third derivative of gaussian.
+<strong>Truncate</strong> Radius of kernel in standard deviations.</p>
+</dd></dl>
+
+</section>
+<section id="uniform-filter">
+<h2>Uniform filter<a class="headerlink" href="#uniform-filter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_statistical_algorithms.SciPyUniformAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_statistical_algorithms.</span></span><span class="sig-name descname"><span class="pre">SciPyUniformAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_statistical_algorithms.html#SciPyUniformAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_statistical_algorithms.SciPyUniformAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uniform filter (a.k.a. box filter or mean filter)</p>
+<p>Calculated with uniform_filter from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with the band mean.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Size</strong> Size of filter in pixels if no footprint is given. Equivalent 
+to a footprint array of shape size_rows × size_cols (in 2D) or 
+size_bands × size_rows × size_cols (in 3D) 
+filled with ones.</p>
+<p><strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Blur — SciPy Filters for QGIS</a><ul>
+<li><a class="reference internal" href="#fourier-ellipsoid">Fourier Ellipsoid</a></li>
+<li><a class="reference internal" href="#fourier-gaussian">Fourier Gaussian</a></li>
+<li><a class="reference internal" href="#fourier-uniform">Fourier uniform</a></li>
+<li><a class="reference internal" href="#gaussian-filter">Gaussian filter</a></li>
+<li><a class="reference internal" href="#uniform-filter">Uniform filter</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="algorithms.html"
+                        title="previous chapter">Processing Algorithms</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="convolution.html"
+                        title="next chapter">Convolution — SciPy Filters for QGIS</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/blur.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="convolution.html" title="Convolution — SciPy Filters for QGIS"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="algorithms.html" title="Processing Algorithms"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" >Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Blur — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Florian Neukirchen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+  </body>
+</html>

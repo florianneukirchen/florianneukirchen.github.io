@@ -1,0 +1,653 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>RasterWizard &#8212; SciPyFilters 1.5
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="RasterWindow and related functions" href="rasterwindow.html" />
+    <link rel="prev" title="Helpers for the Python console" href="pythonhelpers.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="rasterwindow.html" title="RasterWindow and related functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pythonhelpers.html" title="Helpers for the Python console"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="pythonhelpers.html" accesskey="U">Helpers for the Python console</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">RasterWizard</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="rasterwizard">
+<h1>RasterWizard<a class="headerlink" href="#rasterwizard" title="Permalink to this headline">¶</a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.3.</span></p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="helpers.RasterWizard">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">helpers.</span></span><span class="sig-name descname"><span class="pre">RasterWizard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get QGIS raster layers as numpy arrays and the result back into QGIS as a new raster layer.</p>
+<p>To be used in the QGIS Python console for raster processing with <a class="reference external" href="https://numpy.org/">numpy</a>, 
+<a class="reference external" href="https://scipy.org/">SciPy</a>, <a class="reference external" href="https://scikit-image.org/">scikit-image</a>, <a class="reference external" href="https://scikit-learn.org/stable/">scikit-learn</a> 
+or other python libraries. Great for prototype development and experimenting with algorithms.</p>
+<p>The resulting numpy array can be saved to geotiff or in-memory and loaded back into QGIS as a new raster layer, as long as the
+number of pixels is the same as the input layer and the geotransform is not changed (no reprojection, no subsetting in numpy).
+The number of bands and the datatype can be different. See <a class="reference internal" href="#helpers.RasterWizard.toarray" title="helpers.RasterWizard.toarray"><code class="xref py py-meth docutils literal notranslate"><span class="pre">toarray()</span></code></a> and <a class="reference internal" href="#helpers.RasterWizard.tolayer" title="helpers.RasterWizard.tolayer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tolayer()</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As in QGIS and GDAL, the first band is indexed with 1 in <a class="reference internal" href="#helpers.RasterWizard.toarray" title="helpers.RasterWizard.toarray"><code class="xref py py-meth docutils literal notranslate"><span class="pre">toarray()</span></code></a>. In NumPy it is indexed with 0.</p>
+</div>
+<p>On very large rasters, the processing can be done in windows (tiles) to avoid crashes, see <a class="reference internal" href="#helpers.RasterWizard.get_windows" title="helpers.RasterWizard.get_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_windows()</span></code></a>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 1.5: </span>Allow to get band by description, and to set band description.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layer</strong> (<em>QgsRasterLayer</em><em>, </em><em>optional</em>) – instance of qgis.core.QgsRasterLayer, the layer to be processed. Optional, default is the active layer.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy_filters.helpers</span> <span class="kn">import</span> <span class="n">RasterWizard</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+
+<span class="n">wizard</span> <span class="o">=</span> <span class="n">RasterWizard</span><span class="p">()</span> <span class="c1"># Uses active layer if layer is not given</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">wizard</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>    <span class="c1"># Returns numpy array with all bands</span>
+
+<span class="c1"># Any calculation, for example a sobel filter with Scipy</span>
+<span class="c1"># In the example, the result is a numpy array with dtype float32</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">sobel</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span> 
+
+<span class="c1"># Write the result to a geotiff and load it back into QGIS</span>
+<span class="n">wizard</span><span class="o">.</span><span class="n">tolayer</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Sobel&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;/path/to/sobel.tif&quot;</span><span class="p">)</span>
+
+<span class="c1"># You can also get pixel values at [x, y]</span>
+<span class="n">wizard</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span> 
+
+<span class="c1"># or information like shape, CRS, etc.</span>
+<span class="n">wizard</span><span class="o">.</span><span class="n">shape</span>   <span class="c1"># like numpy_array.shape</span>
+<span class="n">wizard</span><span class="o">.</span><span class="n">crs_wkt</span> <span class="c1"># CRS as WKT string</span>
+<span class="n">wizard</span><span class="o">.</span><span class="n">crs</span>     <span class="c1"># CRS as QgsCoordinateReferenceSystem</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.banddesc">
+<span class="sig-name descname"><span class="pre">banddesc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.banddesc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.banddesc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of the band descriptions of the raster layer.</p>
+<p>Helps to find the right band for processing if the band descriptions of the layer are set.
+Otherwise, an empty string is returned for the respective band.
+The band descriptions can be set with GDAL, and QGIS shows a band name in the format “Band 1: description”.</p>
+<p>To get the index of a band (in the NumPy) array by description, 
+use <code class="code docutils literal notranslate"><span class="pre">wizard.banddesc().index(&quot;description&quot;)</span></code>. 
+The band index in QGIS / GDAL or <a class="reference internal" href="#helpers.RasterWizard.tolayer" title="helpers.RasterWizard.tolayer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tolayer()</span></code></a> is + 1.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.5.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of band descriptions</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.countbands">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">countbands</span></span><a class="headerlink" href="#helpers.RasterWizard.countbands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bands in the raster layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bands</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.crs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">crs</span></span><a class="headerlink" href="#helpers.RasterWizard.crs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the CRS of the layer as QgsCoordinateReferenceSystem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>CRS as qgis.core.QgsCoordinateReferenceSystem</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>QgsCoordinateReferenceSystem</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.crs_id">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">crs_id</span></span><a class="headerlink" href="#helpers.RasterWizard.crs_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the authority identifier of the CRS.</p>
+<p>Returns a string like “EPSG:4326”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>CRS authority identifier</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.crs_wkt">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">crs_wkt</span></span><a class="headerlink" href="#helpers.RasterWizard.crs_wkt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the CRS of the layer as WKT string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>CRS as WKT string</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.datatype">
+<span class="sig-name descname"><span class="pre">datatype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_int</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.datatype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.datatype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name of the <a class="reference external" href="https://gdal.org/en/latest/">GDAL</a> datatype of a band.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>band</strong> (<em>int</em><em>, </em><em>optional</em>) – Band index, default is 1. The fist band is indexed with 1.</p></li>
+<li><p><strong>as_int</strong> (<em>bool</em><em>, </em><em>optional</em>) – Return the datatype as integer instead, as defined in enum GDALDataType; default is False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>GDAL Datatype as string or integer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.ds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ds</span></span><a class="headerlink" href="#helpers.RasterWizard.ds" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://gdal.org/en/latest/">GDAL</a> dataset of the raster layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>GDAL dataset</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>osgeo.gdal.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.filename">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#helpers.RasterWizard.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path and filename of the raster layer source file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Path and filename</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.geotransform">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geotransform</span></span><a class="headerlink" href="#helpers.RasterWizard.geotransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Geotransform of the raster layer as used by <a class="reference external" href="https://gdal.org/en/latest/">GDAL</a>.</p>
+<p>The geotransform is a tuple with 6 elements of type float: 
+top left x, w-e pixel resolution, rotation, top left y, rotation, n-s pixel resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Geotransform</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.get_windows">
+<span class="sig-name descname"><span class="pre">get_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">windowsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.get_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.get_windows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator to get windows for processing large rasters in tiles.</p>
+<p>The generated windows are instances of <a class="reference internal" href="rasterwindow.html#helpers.RasterWindow" title="helpers.RasterWindow"><code class="xref py py-class docutils literal notranslate"><span class="pre">RasterWindow</span></code></a>. These do not contain the data, 
+only the pixel indices and sizes that are used internally to read and write the data with <a class="reference external" href="https://gdal.org/en/latest/">GDAL</a>.
+You can iterate over the generated windows, read the data with <a class="reference internal" href="#helpers.RasterWizard.toarray" title="helpers.RasterWizard.toarray"><code class="xref py py-meth docutils literal notranslate"><span class="pre">toarray()</span></code></a> and write the data with <a class="reference internal" href="#helpers.RasterWizard.write_window" title="helpers.RasterWizard.write_window"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write_window()</span></code></a>.
+The output dataset should be set first with <a class="reference internal" href="#helpers.RasterWizard.set_out_ds" title="helpers.RasterWizard.set_out_ds"><code class="xref py py-class docutils literal notranslate"><span class="pre">set_out_ds()</span></code></a>, otherwise a virtual in-memory file is used.
+After processing all windows, the file is written and loaded back into QGIS with <a class="reference internal" href="#helpers.RasterWizard.load_output" title="helpers.RasterWizard.load_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_output()</span></code></a>.</p>
+<p>Note that numpy, scipy etc. are very performant on large arrays. It is best to use a 
+large windowsize or even the whole raster, as long as enough memory is avaible.
+The windows can have a margin, for algorthims that consider the neighborhood of a pixel as well.
+For example, a 3x3 kernel needs a margin of 1.</p>
+<p>If you need the number of windows (e.g. for a progress bar), use <a class="reference internal" href="#helpers.RasterWizard.number_of_windows" title="helpers.RasterWizard.number_of_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">number_of_windows()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>windowsize</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the windows in x and y direction in pixels, default is 5000</p></li>
+<li><p><strong>margin</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the margin in pixels, default is 0</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Generator yielding <a class="reference internal" href="rasterwindow.html#helpers.RasterWindow" title="helpers.RasterWindow"><code class="xref py py-class docutils literal notranslate"><span class="pre">RasterWindow</span></code></a> instances</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy_filters.helpers</span> <span class="kn">import</span> <span class="n">RasterWizard</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+
+<span class="n">wizard</span> <span class="o">=</span> <span class="n">RasterWizard</span><span class="p">()</span>
+
+<span class="n">wizard</span><span class="o">.</span><span class="n">set_out_ds</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;/path/to/sobel.tif&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">win</span> <span class="ow">in</span> <span class="n">wizard</span><span class="o">.</span><span class="n">get_windows</span><span class="p">(</span><span class="n">windowsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">wizard</span><span class="o">.</span><span class="n">toarray</span><span class="p">(</span><span class="n">win</span><span class="o">=</span><span class="n">win</span><span class="p">)</span>
+    <span class="c1"># Your calculation with numpy array a</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">sobel</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+    <span class="n">wizard</span><span class="o">.</span><span class="n">write_window</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">win</span><span class="p">)</span>
+
+<span class="n">wizard</span><span class="o">.</span><span class="n">load_output</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.has_axis_inverted">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_axis_inverted</span></span><a class="headerlink" href="#helpers.RasterWizard.has_axis_inverted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the axis order of the CRS is inverted,
+i.e. not east/north (longitude/latitude).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if axis order is inverted</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.is_geographic">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_geographic</span></span><a class="headerlink" href="#helpers.RasterWizard.is_geographic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the CRS is geographic (i.e. not projected).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if geographic CRS</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.load_output">
+<span class="sig-name descname"><span class="pre">load_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Wizard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.load_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.load_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>After processing windows, write the output file and load it back into QGIS.</p>
+<p>The output file is written to the path given with <a class="reference internal" href="#helpers.RasterWizard.set_out_ds" title="helpers.RasterWizard.set_out_ds"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_out_ds()</span></code></a> or to a virtual in-memory file.
+See <a class="reference internal" href="#helpers.RasterWizard.get_windows" title="helpers.RasterWizard.get_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_windows()</span></code></a> for a full example.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the new layer in QGIS, default is “Wizard”</p></li>
+<li><p><strong>stats</strong> (<em>bool</em><em>, </em><em>optional</em>) – Calculate and write band statistics (min, max, mean, std), default is True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>QgsRasterLayer instance of the new layer</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>QgsRasterLayer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.map_units">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">map_units</span></span><a class="headerlink" href="#helpers.RasterWizard.map_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the units for the projection used by the CRS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Map units</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Qgis.DistanceUnit enum</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#helpers.RasterWizard.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the raster layer in QGIS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Layer name</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.ndim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndim</span></span><a class="headerlink" href="#helpers.RasterWizard.ndim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of dimensions of the raster layer.</p>
+<p>Returns 2 for single band and 3 for multiple bands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of dimensions</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.nodata">
+<span class="sig-name descname"><span class="pre">nodata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.nodata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.nodata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the no data value of a band. If no no data value is set, None is returned.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In GeoTiff, the same no data value is used for all bands.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>band</strong> (<em>int</em><em>, </em><em>optional</em>) – Band index, default is 1. The fist band is indexed with 1.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>No data value</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.number_of_windows">
+<span class="sig-name descname"><span class="pre">number_of_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">windowsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.number_of_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.number_of_windows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of windows that would be generated with <a class="reference internal" href="#helpers.RasterWizard.get_windows" title="helpers.RasterWizard.get_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_windows()</span></code></a> with a given windowsize.</p>
+<p>Since <a class="reference internal" href="#helpers.RasterWizard.get_windows" title="helpers.RasterWizard.get_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_windows()</span></code></a> is a generator, it can only be used once. 
+Use this function to get the number of windows if you need it for a progress bar etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>windowsize</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the windows in pixels, default is 2048</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Number of windows</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.out_filename">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">out_filename</span></span><a class="headerlink" href="#helpers.RasterWizard.out_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path and filename of the output geotiff file.</p>
+<p>Is None if no output file is set. Normally, the output file is set when calling <a class="reference internal" href="#helpers.RasterWizard.tolayer" title="helpers.RasterWizard.tolayer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tolayer()</span></code></a>.
+When iterating over windows, the output file should be set with <a class="reference internal" href="#helpers.RasterWizard.set_out_ds" title="helpers.RasterWizard.set_out_ds"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_out_ds()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Path or None</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.pixel_height">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pixel_height</span></span><a class="headerlink" href="#helpers.RasterWizard.pixel_height" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the height of a pixel in map units, read from the geotransform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Pixel height</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.pixel_width">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pixel_width</span></span><a class="headerlink" href="#helpers.RasterWizard.pixel_width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the width of a pixel in map units, read from the geotransform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Pixel width</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.set_out_ds">
+<span class="sig-name descname"><span class="pre">set_out_ds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banddesc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.set_out_ds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.set_out_ds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up a new output dataset for writing.</p>
+<p>Only to be used directly when iterating over windows, see <a class="reference internal" href="#helpers.RasterWizard.get_windows" title="helpers.RasterWizard.get_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_windows()</span></code></a> for example.
+Otherwise, the output is set in <a class="reference internal" href="#helpers.RasterWizard.tolayer" title="helpers.RasterWizard.tolayer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tolayer()</span></code></a>.</p>
+<p>With default values, the file is written to memory only and has the dtype matching the NumPy array.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 1.5: </span>It is now possible to set the band descriptions with the banddesc parameter. They show up in QGIS as “Band 1: description”.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em><em>, </em><em>optional</em>) – Filename or full file path for the output geotiff, default is None (in-memory only)</p></li>
+<li><p><strong>bands</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of bands in the output dataset, default is None (same as input)</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – Datatype of the output dataset, accepts numpy dtypes: “uint8”, “int8”, “uint16”, “int16”, “uint32”, “int32”, “float32”, “float64”, “complex64”, “complex128”
+default is None, using the datatype of the input layer (same as “input”).</p></li>
+<li><p><strong>nodata</strong> (<em>int</em><em>, </em><em>optional</em>) – No data value, default is None</p></li>
+<li><p><strong>banddesc</strong> (<em>list of str</em><em>, </em><em>optional</em>) – List of band descriptions, default is None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="helpers.RasterWizard.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#helpers.RasterWizard.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shape of the raster layer</p>
+<p>Given in the order (bands, x, y); identical to numpy_array.shape</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Shape of the raster layer</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.toarray">
+<span class="sig-name descname"><span class="pre">toarray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">win</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bands_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.toarray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.toarray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the raster data as numpy array.</p>
+<p>With parameter band, a 2D array is returned; otherwise, all bands are returned as a 3D array 
+(or as 2D array if there is only one band). The order of the dimensions is [bands,] x, y.</p>
+<p>Alternatively, by setting <code class="code docutils literal notranslate"><span class="pre">bands_last=True</span></code>, the order of the dimensions is x, y [,bands] 
+(e.g. expected by scikit-image).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In QGIS and GDAL, the first band is indexed with 1, in numpy with 0.</p>
+</div>
+<p>Can be used together with the RasterWindow class to calculate in a moving window, see <a class="reference internal" href="#helpers.RasterWizard.get_windows" title="helpers.RasterWizard.get_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_windows()</span></code></a> for an example.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 1.5: </span>Accept a string as band parameter to select a band by band description.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>band</strong> (<em>int</em><em>, </em><em>str</em><em>, </em><em>optional</em>) – Band index (int) or band description (str), default is None (all bands). The first band is indexed with 1. Using the band description returns the first band with the given name.</p></li>
+<li><p><strong>win</strong> (<a class="reference internal" href="rasterwindow.html#helpers.RasterWindow" title="helpers.RasterWindow"><em>RasterWindow</em></a><em>, </em><em>optional</em>) – RasterWindow instance for processing in a moving window, default is None</p></li>
+<li><p><strong>wrapping</strong> (<em>bool</em><em>, </em><em>optional</em>) – Fill the margins of the window with the data of the far side of the dataset, to be used with scipy filters with mode=’wrap’, default is False</p></li>
+<li><p><strong>bands_last</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the order of the dimensions is x, y [,bands], default is False, expecting [bands,] x, y</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Numpy array with the raster data. 2D if only one band, 3D if multiple bands.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.tolayer">
+<span class="sig-name descname"><span class="pre">tolayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Wizard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bands_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banddesc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.tolayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.tolayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a numpy array as geotiff or in-memory and load it as a new raster layer in QGIS.</p>
+<p>The array must have the same dimensions in x and y as the input layer. The number of bands and the datatype can be different.
+By default, the datatype is inferred from the NumPy array.
+First, the data is saved as geotiff if a filename (full file path) is given. Otherwise, the geotiff is in-memory only, using <a class="reference external" href="https://gdal.org/en/latest/">GDAL</a> virtual file system.</p>
+<p>If iterating over windows, use <a class="reference internal" href="#helpers.RasterWizard.write_window" title="helpers.RasterWizard.write_window"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write_window()</span></code></a> and <a class="reference internal" href="#helpers.RasterWizard.load_output" title="helpers.RasterWizard.load_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_output()</span></code></a> instead.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 1.5: </span>It is now possible to set the band descriptions with the banddesc parameter. They show up in QGIS as “Band 1: description”.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>numpy.ndarray</em>) – Numpy array with the raster data</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the new layer in QGIS, default is “Wizard”</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Datatype of the output layer, accepts numpy dtypes: “uint8”, “int8”, “uint16”, “int16”, “uint32”, “int32”, “float32”, “float64”, “complex64”, “complex128”
+default is “auto”, using the <a class="reference external" href="https://gdal.org/en/latest/">GDAL</a> datatype matching the numpy array datatype. 
+“input” uses the datatype of the input layer.</p>
+</p></li>
+<li><p><strong>filename</strong> (<em>str</em><em>, </em><em>optional</em>) – Filename or full file path for the output geotiff, default is None (in-memory only)</p></li>
+<li><p><strong>stats</strong> (<em>bool</em><em>, </em><em>optional</em>) – Calculate and write band statistics (min, max, mean, std), default is True</p></li>
+<li><p><strong>bands_last</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the order of the dimensions is x, y [,bands], default is False, expecting [bands,] x, y</p></li>
+<li><p><strong>nodata</strong> (<em>int</em><em>, </em><em>optional</em>) – No data value, default is None</p></li>
+<li><p><strong>banddesc</strong> (<em>list of str</em><em>, </em><em>optional</em>) – List of band descriptions, default is None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>QgsRasterLayer instance of the new layer</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>QgsRasterLayer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="helpers.RasterWizard.write_window">
+<span class="sig-name descname"><span class="pre">write_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">win</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bands_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/helpers/wizard.html#RasterWizard.write_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#helpers.RasterWizard.write_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a numpy array into the window of the output dataset.</p>
+<p>The window is an instance of <a class="reference internal" href="rasterwindow.html#helpers.RasterWindow" title="helpers.RasterWindow"><code class="xref py py-class docutils literal notranslate"><span class="pre">RasterWindow</span></code></a>, generated with <a class="reference internal" href="#helpers.RasterWizard.get_windows" title="helpers.RasterWizard.get_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_windows()</span></code></a>. 
+The margin of the window is automatically sliced off before writing the data back to the raster.
+After processing all windows, the file is written and loaded back into QGIS with <a class="reference internal" href="#helpers.RasterWizard.load_output" title="helpers.RasterWizard.load_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_output()</span></code></a>.
+For a full example with reading and writing windows and loading the result,
+see <a class="reference internal" href="#helpers.RasterWizard.get_windows" title="helpers.RasterWizard.get_windows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_windows()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>numpy.ndarray</em>) – Numpy array with the data to be written</p></li>
+<li><p><strong>win</strong> (<a class="reference internal" href="rasterwindow.html#helpers.RasterWindow" title="helpers.RasterWindow"><em>RasterWindow</em></a>) – Window, RasterWindow instance</p></li>
+<li><p><strong>band</strong> (<em>int</em><em>, </em><em>optional</em>) – Band index, default is None (all bands). The fist band is indexed with 1.</p></li>
+<li><p><strong>bands_last</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the order of the dimensions is x, y [,bands], default is False, expecting [bands,] x, y</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pythonhelpers.html"
+                        title="previous chapter">Helpers for the Python console</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="rasterwindow.html"
+                        title="next chapter">RasterWindow and related functions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/wizard.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="rasterwindow.html" title="RasterWindow and related functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pythonhelpers.html" title="Helpers for the Python console"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="pythonhelpers.html" >Helpers for the Python console</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">RasterWizard</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Florian Neukirchen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+  </body>
+</html>

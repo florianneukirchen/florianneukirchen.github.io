@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Morphological filters — SciPy Filters for QGIS &#8212; SciPyFilters 1.5
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="No Data filters — SciPy Filters for QGIS" href="nodata.html" />
+    <link rel="prev" title="Enhance — SciPy Filters for QGIS" href="enhance.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="nodata.html" title="No Data filters — SciPy Filters for QGIS"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="enhance.html" title="Enhance — SciPy Filters for QGIS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" accesskey="U">Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Morphological filters — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="morphological-filters-scipy-filters-for-qgis">
+<h1>Morphological filters — SciPy Filters for QGIS<a class="headerlink" href="#morphological-filters-scipy-filters-for-qgis" title="Permalink to this headline">¶</a></h1>
+<section id="binary-dilation-erosion-closing-and-opening">
+<h2>Binary dilation, erosion, closing, and opening<a class="headerlink" href="#binary-dilation-erosion-closing-and-opening" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_morphological_algorithm.SciPyBinaryMorphologicalAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_morphological_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyBinaryMorphologicalAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_morphological_algorithm.html#SciPyBinaryMorphologicalAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_morphological_algorithm.SciPyBinaryMorphologicalAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binary morphological filters: dilation, erosion, closing, and opening. 
+Calculated with binary_dilation, 
+binary_erosion, binary_closing, binary_opening respectively from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Dilation</strong> Set pixel to maximum value of neighborhood. Remaining shapes are larger, lines are thicker.
+<strong>Erosion</strong> Set pixel to minimum value of neighborhood. Remaining shapes are smaller, lines are thinner.
+<strong>Closing</strong> Perform dilation and then erosion. Fills small holes, large shapes are preserved.
+<strong>Opening</strong> Perform erosion and then dilation. Removes small shapes, large shapes are preserved.</p>
+<p><strong>Structure</strong> String representation of array. 
+Must have 2 dimensions if <em>dimension</em> is set to 2D. 
+Should have 3 dimensions if <em>dimension</em> is set to 3D, 
+but a 2D array is also excepted (a new axis is added as first 
+axis and the result is the same as calculating each band 
+seperately). Examples can be loaded with the load button. 
+For convenience (i.e. when calling from a script), 
+the following shortcuts are accepted as well: 
+“square”, “cross”, “cross3D”, “ball”, “cube”.</p>
+<p><strong>Origin</strong> Shift the origin (hotspot) of the filter.</p>
+<p><strong>Iterations</strong> Each step of filter is repeated this number of times.
+<strong>Border value</strong> Valute at border of output array, defaults to 0. 
+<strong>Mask</strong> Optional mask layer.</p>
+</dd></dl>
+
+</section>
+<section id="grey-dilation-erosion-closing-and-opening">
+<h2>Grey dilation, erosion, closing, and opening<a class="headerlink" href="#grey-dilation-erosion-closing-and-opening" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_morphological_algorithm.SciPyGreyMorphologicalAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_morphological_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyGreyMorphologicalAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_morphological_algorithm.html#SciPyGreyMorphologicalAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_morphological_algorithm.SciPyGreyMorphologicalAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grey morphological filters: dilation, erosion, closing, and opening. 
+Calculated for every band with grey_dilation, 
+grey_erosion, gey_closing or grey_opening, respectively from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dilation</strong> Set pixel to maximum value of neighborhood. Remaining shapes are larger, lines are thicker.
+<strong>Erosion</strong> Set pixel to minimum value of neighborhood. Remaining shapes are smaller, lines are thinner.
+<strong>Closing</strong> Perform dilation and then erosion. Fills small holes, large shapes are preserved.
+<strong>Opening</strong> Perform erosion and then dilation. Removes small shapes, large shapes are preserved.</p>
+<p><strong>Structure</strong> String representation of array. 
+Must have 2 dimensions if <em>dimension</em> is set to 2D. 
+Should have 3 dimensions if <em>dimension</em> is set to 3D, 
+but a 2D array is also excepted (a new axis is added as first 
+axis and the result is the same as calculating each band 
+seperately). Examples can be loaded with the load button. 
+For convenience (i.e. when calling from a script), 
+the following shortcuts are accepted as well: 
+“square”, “cross”, “cross3D”, “ball”, “cube”.</p>
+<p><strong>Origin</strong> Shift the origin (hotspot) of the filter.</p>
+<p><strong>Size</strong> Size of flat and full structuring element, optional if footprint or structure is provided.
+<strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).
+<strong>Footprint</strong> Positions of elements of a flat structuring element used for the filter (string representation of array, only used if checkbox is checked).</p>
+</dd></dl>
+
+</section>
+<section id="fill-holes">
+<h2>Fill holes<a class="headerlink" href="#fill-holes" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_morphological_binary_fill_holes.SciPyBinaryFillHolesAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_morphological_binary_fill_holes.</span></span><span class="sig-name descname"><span class="pre">SciPyBinaryFillHolesAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_morphological_binary_fill_holes.html#SciPyBinaryFillHolesAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_morphological_binary_fill_holes.SciPyBinaryFillHolesAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill holes in binary shapes by using binary dilations</p>
+<p>Calculated with binary_fill_holes from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Structure</strong> String representation of array. 
+Must have 2 dimensions if <em>dimension</em> is set to 2D. 
+Should have 3 dimensions if <em>dimension</em> is set to 3D, 
+but a 2D array is also excepted (a new axis is added as first 
+axis and the result is the same as calculating each band 
+seperately). Examples can be loaded with the load button. 
+For convenience (i.e. when calling from a script), 
+the following shortcuts are accepted as well: 
+“square”, “cross”, “cross3D”, “ball”, “cube”.</p>
+</dd></dl>
+
+</section>
+<section id="hit-or-miss">
+<h2>Hit or miss<a class="headerlink" href="#hit-or-miss" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_binary_hit_miss.SciPyBinaryHitMissAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_binary_hit_miss.</span></span><span class="sig-name descname"><span class="pre">SciPyBinaryHitMissAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_binary_hit_miss.html#SciPyBinaryHitMissAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_binary_hit_miss.SciPyBinaryHitMissAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preserves pixels whose neighbourhood matches structure1, but does not match the (disjoint) structure2.  
+Calculated with binary_hit_or_miss from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>Structure 1</strong> String representation of array. 
+<strong>Structure 2</strong> String representation of array, disjoint to structure 1. 
+If no value is provided, the complementary of structure1 is taken.</p>
+<p>Both structures must have 2 dimensions if <em>dimension</em> is set to 2D. 
+Should have 3 dimensions if <em>dimension</em> is set to 3D, 
+but a 2D array is also excepted (a new axis is added as first 
+axis and the result is the same as calculating each band 
+seperately).</p>
+</dd></dl>
+
+</section>
+<section id="tophat-or-morphological-gradient-laplace">
+<h2>Tophat or morphological gradient/Laplace<a class="headerlink" href="#tophat-or-morphological-gradient-laplace" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_morphological_algorithm.SciPyTophatAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_morphological_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyTophatAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_morphological_algorithm.html#SciPyTophatAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_morphological_algorithm.SciPyTophatAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Morphological filters: black/white tophat, morphological gradient/laplace.</p>
+<p>Calculated with black_tophat, 
+white_tophat, morphological_radient or morphological_laplace, respectively from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/ndimage.html">scipy.ndimage</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data cells within the filter radius are filled with 0.</p>
+</div>
+<p><strong>Dimension</strong> Calculate for each band separately (2D) 
+or use all bands as a 3D datacube and perform filter in 3D.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>bands will be the first axis of the datacube.</p>
+</div>
+<p><strong>White tophat</strong> Difference between input raster and it’s opening. Extracts white spots smaller than the structural element.
+<strong>Black tophat</strong> Difference between input raster and it’s closing. Extracts black spots smaller than the structural element.
+<strong>Morphological gradient</strong> Difference between dilation and erosion.
+<strong>Morphological laplace</strong> Difference between internal and external gradient.</p>
+<p><strong>Structure</strong> String representation of array. 
+Must have 2 dimensions if <em>dimension</em> is set to 2D.
+Should have 3 dimensions if <em>dimension</em> is set to 3D, 
+but a 2D array is also excepted (a new axis is added as first 
+axis and the result is the same as calculating each band 
+seperately). Examples can be loaded with the load button. 
+For convenience (i.e. when calling from a script), 
+the following shortcuts are accepted as well: 
+“square”, “cross”, “cross3D”, “ball”, “cube”.</p>
+<p><strong>Origin</strong> Shift the origin (hotspot) of the filter.</p>
+<p><strong>Size</strong> Size of flat and full structuring element, optional if footprint or structure is provided.
+<strong>Border mode</strong> determines how input is extended around 
+the edges: <em>Reflect</em> (input is extended by reflecting at the edge), 
+<em>Constant</em> (fill around the edges with a <strong>constant value</strong>), 
+<em>Nearest</em> (extend by replicating the nearest pixel), 
+<em>Mirror</em> (extend by reflecting about the center of last pixel), 
+<em>Wrap</em> (extend by wrapping around to the opposite edge).</p>
+<p><strong>Footprint</strong> Positions of elements of a flat structuring element 
+used for the filter (as string representation of array). 
+Must have 2 dimensions if <em>dimension</em> is set to 2D. 
+Should have 3 dimensions if <em>dimension</em> is set to 3D, 
+but a 2D array is also excepted (a new axis is added as first 
+axis and the result is the same as calculating each band 
+seperately). Examples can be loaded with the load button. 
+For convenience (i.e. when calling from a script), 
+the following shortcuts are accepted as well: 
+“square”, “cross”, “cross3D”, “ball”, “cube”.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Morphological filters — SciPy Filters for QGIS</a><ul>
+<li><a class="reference internal" href="#binary-dilation-erosion-closing-and-opening">Binary dilation, erosion, closing, and opening</a></li>
+<li><a class="reference internal" href="#grey-dilation-erosion-closing-and-opening">Grey dilation, erosion, closing, and opening</a></li>
+<li><a class="reference internal" href="#fill-holes">Fill holes</a></li>
+<li><a class="reference internal" href="#hit-or-miss">Hit or miss</a></li>
+<li><a class="reference internal" href="#tophat-or-morphological-gradient-laplace">Tophat or morphological gradient/Laplace</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="enhance.html"
+                        title="previous chapter">Enhance — SciPy Filters for QGIS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nodata.html"
+                        title="next chapter">No Data filters — SciPy Filters for QGIS</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/morphological.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="nodata.html" title="No Data filters — SciPy Filters for QGIS"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="enhance.html" title="Enhance — SciPy Filters for QGIS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" >Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Morphological filters — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Florian Neukirchen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+  </body>
+</html>

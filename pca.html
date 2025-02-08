@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Principal Component Analysis (PCA) — SciPy Filters for QGIS &#8212; SciPyFilters 1.5
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Pixel based filters — SciPy Filters for QGIS" href="pixelfilters.html" />
+    <link rel="prev" title="No Data filters — SciPy Filters for QGIS" href="nodata.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pixelfilters.html" title="Pixel based filters — SciPy Filters for QGIS"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nodata.html" title="No Data filters — SciPy Filters for QGIS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" accesskey="U">Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Principal Component Analysis (PCA) — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="principal-component-analysis-pca-scipy-filters-for-qgis">
+<h1>Principal Component Analysis (PCA) — SciPy Filters for QGIS<a class="headerlink" href="#principal-component-analysis-pca-scipy-filters-for-qgis" title="Permalink to this headline">¶</a></h1>
+<section id="principal-component-analysis-pca">
+<h2>Principal Component Analysis (PCA)<a class="headerlink" href="#principal-component-analysis-pca" title="Permalink to this headline">¶</a></h2>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 1.5: </span>Add parameters plot and standard scaler</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_pca_algorithm.SciPyPCAAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_pca_algorithm.</span></span><span class="sig-name descname"><span class="pre">SciPyPCAAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_pca_algorithm.html#SciPyPCAAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_pca_algorithm.SciPyPCAAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Principal Component Analysis (PCA)</p>
+<p>calculated using Singular Value Decomposition (SVD) using svd from 
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/linalg.html">scipy.linalg</a>.</p>
+<p>With default parameters, all components are kept. Optionally, either the 
+<em>number of components</em> to keep or the <em>percentage of variance</em> 
+explained by the kept components can be set.</p>
+<p><strong>Standard Scaler</strong> Optionally scale each band to unit variance (std of 1) before performing PCA (std of each band is reported in the output). Otherwise, the absolute values of the scores will be in a similar range as the original data. (Added in version 1.5)</p>
+<p><strong>Number of components</strong> to keep. 0 for all components. If negative: 
+number of components to remove. 
+Ignored if percentage of variance is set.</p>
+<p><strong>Percentage of variance to keep</strong> is only used if it is greater than 0 
+(typical values would be in the range between 90 and 100).</p>
+<p><strong>Plot</strong> If plotly is available, a plot of the variance explained by
+the principal components is created and saved as HTML file.</p>
+<p><strong>Output</strong> The output raster contains 
+the data projected into the principal components 
+(i.e. the PCA scores).</p>
+<p><strong>Output data type</strong> Float32 or Float64</p>
+<p>The following values / vectors are avaible a) in the log tab of 
+the processing window, b) in JSON format in the “Abstract” field 
+of the metadata of the output raster layer, eventually to be used 
+by subsequent transformations, and c) in the output dict if 
+the tool has been called from the python console or a script:
+Singular values (of SVD),
+Variance explained (Eigenvalues),
+Ratio of variance explained,
+Cumulated sum of variance explained,
+Eigenvectors (V of SVD),
+Loadings (eigenvectors scaled by sqrt(eigenvalues)),
+Band Mean.</p>
+<p>The plugin should give the same results as sklearn.decomposition.PCA
+from <a class="reference external" href="https://scikit-learn.org/">scikit-learn</a>: 
+‘singular values’ is <cite>pca.singular_values_</cite>
+‘eigenvectors’ is <cite>pca.components_</cite>
+‘variance explained’ is <cite>pca.explained_variance_</cite> in sklearn.</p>
+</dd></dl>
+
+</section>
+<section id="keep-only-n-components">
+<h2>Keep only n components<a class="headerlink" href="#keep-only-n-components" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_pca_helper_algorithms.SciPyKeepN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_pca_helper_algorithms.</span></span><span class="sig-name descname"><span class="pre">SciPyKeepN</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_pca_helper_algorithms.html#SciPyKeepN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_pca_helper_algorithms.SciPyKeepN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keep only n components</p>
+<p>Utility to remove components of lesser importance 
+after a principal components analysis (PCA)</p>
+<p><strong>Number of components</strong> to keep. Negative numbers:  
+numbers of components to remove.</p>
+</dd></dl>
+
+</section>
+<section id="transform-from-principal-components">
+<h2>Transform from principal components<a class="headerlink" href="#transform-from-principal-components" title="Permalink to this headline">¶</a></h2>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 1.5: </span>Add parameter Std of original bands</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_pca_helper_algorithms.SciPyTransformFromPCAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_pca_helper_algorithms.</span></span><span class="sig-name descname"><span class="pre">SciPyTransformFromPCAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_pca_helper_algorithms.html#SciPyTransformFromPCAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_pca_helper_algorithms.SciPyTransformFromPCAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform from principal components</p>
+<p>Transform data from principal components (i.e. the PCA scores) 
+back into the original feature space 
+using a matrix of eigenvectors by taking the 
+dot product of the scores the with the transpose of the matrix of eigenvectors 
+and adding the original means to the result.</p>
+<p>The eigenvectors can also be read from the metadata 
+of the input layer, as long as they exist and are complete.</p>
+<p><strong>Eigenvectors</strong> Matrix of eigenvectors (as string). 
+Optional if the next parameter is set. 
+The matrix can be taken from the output of the PCA algorith of this plugin.</p>
+<p><strong>Mean of original bands</strong> As first step of PCA, the data of each 
+band is centered by subtracting the means. These must be added 
+after rotating back into the original feature space. 
+Optional if the meta data of the input layer is complete. 
+(Use false means if they were used for the forward transformation.)</p>
+<p><strong>Std of original bands</strong> Empty string (no scaling was used) or list of standard deviations
+for each band of the original data that was used for PCA.</p>
+<p><strong>Output data type</strong> Float32 or Float64.</p>
+</dd></dl>
+
+</section>
+<section id="transform-to-principal-components">
+<h2>Transform to principal components<a class="headerlink" href="#transform-to-principal-components" title="Permalink to this headline">¶</a></h2>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 1.5: </span>Add parameter Std of original bands</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_pca_helper_algorithms.SciPyTransformToPCAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_pca_helper_algorithms.</span></span><span class="sig-name descname"><span class="pre">SciPyTransformToPCAlgorithm</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_pca_helper_algorithms.html#SciPyTransformToPCAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_pca_helper_algorithms.SciPyTransformToPCAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform to principal components</p>
+<p>Transform data into given principal components 
+with a matrix of eigenvectors by taking the 
+dot product with a matrix of weights (after centering or scaling the data).</p>
+<p>The eigenvectors can also be read from the metadata of an 
+existing PCA layer.</p>
+<p><strong>Eigenvectors</strong> Matrix of eigenvectors (as string). 
+Optional if the next parameter is set.</p>
+<p><strong>Read eigenvectors from PCA layer metadata</strong> 
+Reads the weights for the transformation from the metadata 
+of a layer that was generated using the PCA algorithm of this plugin. 
+Ignored if the parameter <em>eigenvectors</em> is used.</p>
+<p><strong>Number of components</strong> is only used if the value is greater than 0 and 
+smaller than the count of original bands.</p>
+<p><strong>False mean for each band</strong> As first step of PCA, the data of each 
+band is centered by subtracting the means. If false means are provided, 
+these are substracted instead of the real means of the input layer. 
+This allows to transform another raster image into the same space 
+as the principal components of another layer. The result is usefull 
+for comparation of several rasters, but should not be considered to be 
+proper principal components. Only used if “Used false mean” is checked.</p>
+<p><strong>Use false mean</strong> See also <em>false mean of each band</em>. The 
+false mean to be used can also be read from the metadata of a PCA layer.</p>
+<p><strong>Std of original bands</strong> Empty string (no scaling) or list of standard deviations
+for each band of the original data that was used for PCA. If provided, the data is 
+scaled by dividing by the provided standard deviations.</p>
+<p><strong>Output data type</strong> Float32 or Float64.</p>
+</dd></dl>
+
+</section>
+<section id="biplot">
+<h2>Biplot<a class="headerlink" href="#biplot" title="Permalink to this headline">¶</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.5.</span></p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="scipy_filters.algs.scipy_pca_biplot.SciPyPCABiplot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scipy_filters.algs.scipy_pca_biplot.</span></span><span class="sig-name descname"><span class="pre">SciPyPCABiplot</span></span><a class="reference internal" href="_modules/scipy_filters/algs/scipy_pca_biplot.html#SciPyPCABiplot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scipy_filters.algs.scipy_pca_biplot.SciPyPCABiplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot an interactive biplot of the principal components</p>
+<p>The input raster must be the result of the PCA algorithm of this plugin,
+with at least the first two components (2 bands).
+The loadings are read from the metadata.</p>
+<p>The scores (PC1 and PC2 of each pixel) are plotted as contours (there would be too many points for a scatter plot).</p>
+<p>The loadings are plotted as vectors, with the length and direction indicating the contribution of the bands
+to the first and second principal component.</p>
+<p>Use the zoom tool to explore.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires Plotly.</p>
+</div>
+<p><strong>Input</strong> PCA layer</p>
+<p><strong>Plot</strong> The plot is saved as html and can be opened in a browser.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Principal Component Analysis (PCA) — SciPy Filters for QGIS</a><ul>
+<li><a class="reference internal" href="#principal-component-analysis-pca">Principal Component Analysis (PCA)</a></li>
+<li><a class="reference internal" href="#keep-only-n-components">Keep only n components</a></li>
+<li><a class="reference internal" href="#transform-from-principal-components">Transform from principal components</a></li>
+<li><a class="reference internal" href="#transform-to-principal-components">Transform to principal components</a></li>
+<li><a class="reference internal" href="#biplot">Biplot</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nodata.html"
+                        title="previous chapter">No Data filters — SciPy Filters for QGIS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pixelfilters.html"
+                        title="next chapter">Pixel based filters — SciPy Filters for QGIS</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pca.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pixelfilters.html" title="Pixel based filters — SciPy Filters for QGIS"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nodata.html" title="No Data filters — SciPy Filters for QGIS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="algorithms.html" >Processing Algorithms</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Principal Component Analysis (PCA) — SciPy Filters for QGIS</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Florian Neukirchen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+  </body>
+</html>
