@@ -5,7 +5,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>scipy_filters.algs.scipy_pca_helper_algorithms &#8212; SciPyFilters 1.3 documentation</title>
+    <title>scipy_filters.algs.scipy_pca_helper_algorithms &#8212; SciPyFilters 1.5
+ documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/classic.css" />
     
@@ -23,7 +24,8 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">scipy_filters.algs.scipy_pca_helper_algorithms</a></li> 
       </ul>
@@ -105,12 +107,11 @@
     <span class="n">OUTPUT</span> <span class="o">=</span> <span class="s1">&#39;OUTPUT&#39;</span>
     <span class="n">INPUT</span> <span class="o">=</span> <span class="s1">&#39;INPUT&#39;</span>
     <span class="n">BANDMEAN</span> <span class="o">=</span> <span class="s1">&#39;BANDMEAN&#39;</span>
+    <span class="n">BANDSTD</span> <span class="o">=</span> <span class="s1">&#39;BANDSTD&#39;</span>
     <span class="n">DTYPE</span> <span class="o">=</span> <span class="s1">&#39;DTYPE&#39;</span>
 
 
     <span class="n">NODATA</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9999</span>
-
-    <span class="c1"># Overwrite constants of base class</span>
 
     <span class="n">_groupid</span> <span class="o">=</span> <span class="s2">&quot;pca&quot;</span> 
     <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -124,6 +125,8 @@
     <span class="n">falsemean</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="n">_bandmean</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_bandstd</span> <span class="o">=</span> <span class="kc">None</span>
+
     <span class="n">V</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">abstract</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
@@ -172,6 +175,18 @@
       
         <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">mean_param</span><span class="p">)</span>
 
+        <span class="n">std_param</span> <span class="o">=</span> <span class="n">QgsProcessingParameterString</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">BANDSTD</span><span class="p">,</span>
+            <span class="n">tr</span><span class="p">(</span><span class="s1">&#39;Std of original bands if standard scaler was used, otherwise leave empty&#39;</span><span class="p">),</span>
+            <span class="n">defaultValue</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="n">multiLine</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">std_param</span><span class="o">.</span><span class="n">setFlags</span><span class="p">(</span><span class="n">std_param</span><span class="o">.</span><span class="n">flags</span><span class="p">()</span> <span class="o">|</span> <span class="n">QgsProcessingParameterDefinition</span><span class="o">.</span><span class="n">Flag</span><span class="o">.</span><span class="n">FlagAdvanced</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">std_param</span><span class="p">)</span>
+
         <span class="n">dtype_param</span> <span class="o">=</span> <span class="n">QgsProcessingParameterEnum</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">DTYPE</span><span class="p">,</span>
             <span class="n">tr</span><span class="p">(</span><span class="s1">&#39;Output data type&#39;</span><span class="p">),</span>
@@ -204,7 +219,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">abstract</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">metadata</span><span class="p">()</span><span class="o">.</span><span class="n">abstract</span><span class="p">()</span>
             <span class="c1"># The other case is handled in the inheriting class</span>
 
-        <span class="n">eigenvectors</span><span class="p">,</span> <span class="n">means</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">json_to_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="p">)</span>
+        <span class="n">eigenvectors</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">bandstd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">json_to_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="p">)</span>
 
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -236,12 +251,37 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_bandmean</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
         
+        <span class="c1"># Get the standard deviations,  start with metadata of layer and eventually overwrite it</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bandstd</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">bandstd</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bandstd</span> <span class="o">=</span> <span class="n">bandstd</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">bandstd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsString</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">BANDSTD</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="n">bandstd</span> <span class="o">=</span> <span class="n">bandstd</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">bandstd</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">bandstd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;[&quot;</span> <span class="ow">and</span> <span class="n">bandstd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;]&quot;</span><span class="p">):</span>
+                <span class="n">bandstd</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="n">bandstd</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">decoded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">bandstd</span><span class="p">)</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_bandstd</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+
         <span class="bp">self</span><span class="o">.</span><span class="n">outdtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsInt</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DTYPE</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outdtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outdtype</span> <span class="o">+</span> <span class="mi">6</span> <span class="c1"># float32 and float64 in gdal</span>
 
     <span class="k">def</span> <span class="nf">checkParameterValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">layerstds</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">inputlayer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsRasterLayer</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">INPUT</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gdal&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Raster provider </span><span class="si">{}</span><span class="s2"> is not supported, must be raster layer with a local file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()))</span>
+
         <span class="n">bands</span> <span class="o">=</span> <span class="n">inputlayer</span><span class="o">.</span><span class="n">bandCount</span><span class="p">()</span>
 
         <span class="c1"># Check maxsize</span>
@@ -281,6 +321,7 @@
                 <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Could not decode metadata abstract&quot;</span><span class="p">)</span>
             <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">decoded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eigenvectors&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">layermeans</span> <span class="o">=</span> <span class="n">decoded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;band mean&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">layerstds</span> <span class="o">=</span> <span class="n">decoded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;band std&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">eigenvectors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -329,6 +370,30 @@
                 <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;False shape of means list&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">layermeans</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;False shape of means list&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># Check provided standard deviations</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layerstds</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">layerstds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">layerstds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">layerstds</span><span class="p">)</span>
+        
+        <span class="n">bandstd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsString</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">BANDSTD</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="n">bandstd</span> <span class="o">=</span> <span class="n">bandstd</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">bandstd</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">bandstd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;[&quot;</span> <span class="ow">and</span> <span class="n">bandstd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;]&quot;</span><span class="p">):</span>
+                <span class="n">bandstd</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="n">bandstd</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bandstd</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">decoded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">bandstd</span><span class="p">)</span>
+                <span class="n">bandstd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Could not parse list of standard deviations&quot;</span><span class="p">)</span>
+            <span class="n">layerstds</span> <span class="o">=</span> <span class="n">bandstd</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">layerstds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">layerstds</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;False shape of standard deviations list&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">layerstds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;False shape of standard deviations list&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">checkParameterValues</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 
@@ -401,6 +466,10 @@
 
             <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bandmean</span>
 
+            <span class="c1"># Scale data</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bandstd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bandstd</span>
+
 
         <span class="c1"># Transform to PC</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverse</span><span class="p">:</span>
@@ -420,6 +489,9 @@
 
         <span class="c1"># Add the original band means</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverse</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bandstd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_array</span> <span class="o">=</span> <span class="n">new_array</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bandstd</span>
+
             <span class="n">new_array</span> <span class="o">=</span> <span class="n">new_array</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bandmean</span>
 
         <span class="c1"># Set no data value</span>
@@ -447,7 +519,7 @@
 
 
         <span class="c1"># Set no data value</span>
-        <span class="k">if</span> <span class="n">nodatavalue</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">nodatavalue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">bands</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">out_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">SetNoDataValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NODATA</span><span class="p">)</span>
 
@@ -490,20 +562,26 @@
 
     <span class="k">def</span> <span class="nf">json_to_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get eigenvectors and means from json string</span>
+<span class="sd">        Get eigenvectors, band means and eventually band stds from json string</span>
 <span class="sd">        </span>
+<span class="sd">        Band means have been used for centering data, stds for scaling.</span>
+
 <span class="sd">        Returns: </span>
 <span class="sd">        </span>
 <span class="sd">        eigenvectors: np.array | None, </span>
 <span class="sd">        means: np.array | None</span>
+<span class="sd">        stds: np.array | None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        
         <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">decoded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
         <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">decoded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eigenvectors&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -517,7 +595,14 @@
             <span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">means</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
             <span class="n">means</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="n">eigenvectors</span><span class="p">,</span> <span class="n">means</span>
+
+        <span class="n">stds</span> <span class="o">=</span> <span class="n">decoded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;band std&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">stds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stds</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">stds</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">eigenvectors</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">stds</span>
 
 
     <span class="k">class</span> <span class="nc">UpdateMetadata</span><span class="p">(</span><span class="n">QgsProcessingLayerPostProcessorInterface</span><span class="p">):</span>
@@ -566,7 +651,7 @@
 
 <span class="sd">    Transform data into given principal components </span>
 <span class="sd">    with a matrix of eigenvectors by taking the </span>
-<span class="sd">    dot product with a matrix of weights (after centering the data). </span>
+<span class="sd">    dot product with a matrix of weights (after centering or scaling the data). </span>
 
 
 <span class="sd">    The eigenvectors can also be read from the metadata of an </span>
@@ -594,6 +679,10 @@
 
 <span class="sd">    **Use false mean** See also *false mean of each band*. The </span>
 <span class="sd">    false mean to be used can also be read from the metadata of a PCA layer. </span>
+
+<span class="sd">    **Std of original bands** Empty string (no scaling) or list of standard deviations</span>
+<span class="sd">    for each band of the original data that was used for PCA. If provided, the data is </span>
+<span class="sd">    scaled by dividing by the provided standard deviations. </span>
 <span class="sd">    </span>
 <span class="sd">    **Output data type** Float32 or Float64.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -677,6 +766,9 @@
 <span class="sd">    after rotating back into the original feature space. </span>
 <span class="sd">    Optional if the meta data of the input layer is complete. </span>
 <span class="sd">    (Use false means if they were used for the forward transformation.)</span>
+
+<span class="sd">    **Std of original bands** Empty string (no scaling was used) or list of standard deviations</span>
+<span class="sd">    for each band of the original data that was used for PCA. </span>
 <span class="sd">            </span>
 <span class="sd">    **Output data type** Float32 or Float64.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -782,7 +874,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">out_ds</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ncomponents</span><span class="p">,:,:])</span>
 
         <span class="c1"># Set no data value</span>
-        <span class="k">if</span> <span class="n">nodatavalue</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">nodatavalue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncomponents</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">out_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">SetNoDataValue</span><span class="p">(</span><span class="n">nodatavalue</span><span class="p">)</span>
 
@@ -811,6 +903,15 @@
 
 
         <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">OUTPUT</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_raster</span><span class="p">}</span>
+    
+    <span class="k">def</span> <span class="nf">checkParameterValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+
+        <span class="n">inputlayer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsRasterLayer</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">INPUT</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gdal&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Raster provider </span><span class="si">{}</span><span class="s2"> is not supported, must be raster layer with a local file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()))</span>
+        
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">checkParameterValues</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
     
 
     <span class="k">class</span> <span class="nc">PostProcess</span><span class="p">(</span><span class="n">QgsProcessingLayerPostProcessorInterface</span><span class="p">):</span>
@@ -899,7 +1000,8 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">scipy_filters.algs.scipy_pca_helper_algorithms</a></li> 
       </ul>

@@ -5,7 +5,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>helpers.wizard &#8212; SciPyFilters 1.3 documentation</title>
+    <title>helpers.wizard &#8212; SciPyFilters 1.5
+ documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/classic.css" />
     
@@ -23,7 +24,8 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">helpers.wizard</a></li> 
       </ul>
@@ -84,14 +86,20 @@
 <span class="sd">    `SciPy &lt;https://scipy.org/&gt;`_, `scikit-image &lt;https://scikit-image.org/&gt;`_, `scikit-learn &lt;https://scikit-learn.org/stable/&gt;`_ </span>
 <span class="sd">    or other python libraries. Great for prototype development and experimenting with algorithms.</span>
 
-<span class="sd">    The resulting numpy array can be loaded back into QGIS as a new raster layer, as long as the</span>
+<span class="sd">    The resulting numpy array can be saved to geotiff or in-memory and loaded back into QGIS as a new raster layer, as long as the</span>
 <span class="sd">    number of pixels is the same as the input layer and the geotransform is not changed (no reprojection, no subsetting in numpy).</span>
 <span class="sd">    The number of bands and the datatype can be different. See :py:meth:`.toarray` and :py:meth:`.tolayer`.</span>
 
+<span class="sd">    .. note:: As in QGIS and GDAL, the first band is indexed with 1 in :py:meth:`.toarray`. In NumPy it is indexed with 0.</span>
+
 <span class="sd">    On very large rasters, the processing can be done in windows (tiles) to avoid crashes, see :py:meth:`.get_windows`.</span>
+
+<span class="sd">    .. versionchanged:: 1.5</span>
+<span class="sd">        Allow to get band by description, and to set band description.</span>
 
 <span class="sd">    :param layer: instance of qgis.core.QgsRasterLayer, the layer to be processed. Optional, default is the active layer.</span>
 <span class="sd">    :type layer: QgsRasterLayer, optional</span>
+
 
 <span class="sd">    Example::</span>
 
@@ -141,11 +149,19 @@
         <span class="k">if</span> <span class="n">layer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">layer</span> <span class="o">=</span> <span class="n">iface</span><span class="o">.</span><span class="n">activeLayer</span><span class="p">()</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">QgsRasterLayer</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Layer is not a raster layer, must be QgsRasterLayer with a local file&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gdal&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Raster provider </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span><span class="si">}</span><span class="s2"> is not supported, must be raster layer with a local file&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span> <span class="o">=</span> <span class="n">layer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">source</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_out_filename</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dst_ds</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_filename</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Could not open layer with GDAL&quot;</span><span class="p">)</span>
@@ -213,7 +229,7 @@
             <span class="k">return</span> <span class="mi">3</span>
         
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Shape of the raster layer</span>
 <span class="sd">         </span>
@@ -368,7 +384,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the no data value of a band. If no no data value is set, None is returned.</span>
 
-<span class="sd">        Note: In GeoTiff, the same no data value is used for all bands.</span>
+<span class="sd">        .. note:: In GeoTiff, the same no data value is used for all bands.</span>
 
 <span class="sd">        :param band: Band index, default is 1. The fist band is indexed with 1.</span>
 <span class="sd">        :type band: int, optional</span>
@@ -388,10 +404,15 @@
 <span class="sd">        Alternatively, by setting :code:`bands_last=True`, the order of the dimensions is x, y [,bands] </span>
 <span class="sd">        (e.g. expected by scikit-image).</span>
 
+<span class="sd">        .. note:: In QGIS and GDAL, the first band is indexed with 1, in numpy with 0.</span>
+
 <span class="sd">        Can be used together with the RasterWindow class to calculate in a moving window, see :py:meth:`.get_windows` for an example.</span>
 
-<span class="sd">        :param band: Band index, default is None (all bands). The fist band is indexed with 1.</span>
-<span class="sd">        :type band: int, optional</span>
+<span class="sd">        .. versionchanged:: 1.5</span>
+<span class="sd">            Accept a string as band parameter to select a band by band description.</span>
+
+<span class="sd">        :param band: Band index (int) or band description (str), default is None (all bands). The first band is indexed with 1. Using the band description returns the first band with the given name.</span>
+<span class="sd">        :type band: int, str, optional</span>
 <span class="sd">        :param win: RasterWindow instance for processing in a moving window, default is None</span>
 <span class="sd">        :type win: RasterWindow, optional</span>
 <span class="sd">        :param wrapping: Fill the margins of the window with the data of the far side of the dataset, to be used with scipy filters with mode=&#39;wrap&#39;, default is False</span>
@@ -401,6 +422,11 @@
 <span class="sd">        :return: Numpy array with the raster data. 2D if only one band, 3D if multiple bands.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">band</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">band</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Empty string is not a valid band description&quot;</span><span class="p">)</span>
+            <span class="n">band</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">banddesc</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">band</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="c1"># ValueError if not in list</span>
+
         <span class="k">if</span> <span class="n">band</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds</span>
         <span class="k">else</span><span class="p">:</span>
@@ -450,6 +476,26 @@
         <span class="k">return</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDataTypeName</span><span class="p">(</span><span class="n">i</span><span class="p">)</span></div>
     
 
+<div class="viewcode-block" id="RasterWizard.banddesc"><a class="viewcode-back" href="../../wizard.html#helpers.RasterWizard.banddesc">[docs]</a>    <span class="k">def</span> <span class="nf">banddesc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a list of the band descriptions of the raster layer.</span>
+
+<span class="sd">        Helps to find the right band for processing if the band descriptions of the layer are set.</span>
+<span class="sd">        Otherwise, an empty string is returned for the respective band.</span>
+<span class="sd">        The band descriptions can be set with GDAL, and QGIS shows a band name in the format &quot;Band 1: description&quot;.</span>
+<span class="sd">                </span>
+<span class="sd">        To get the index of a band (in the NumPy) array by description, </span>
+<span class="sd">        use :code:`wizard.banddesc().index(&quot;description&quot;)`. </span>
+<span class="sd">        The band index in QGIS / GDAL or :py:meth:`tolayer` is + 1.</span>
+
+<span class="sd">        .. versionadded:: 1.5</span>
+
+<span class="sd">        :return: List of band descriptions</span>
+<span class="sd">        :rtype: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">GetDescription</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds</span><span class="o">.</span><span class="n">RasterCount</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span></div>
+    
+
     <span class="k">def</span> <span class="nf">_memfile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a virtual filename, the file will be written to memory only.</span>
@@ -458,12 +504,17 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;/vsimem/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.tif&quot;</span>
 
 
-<div class="viewcode-block" id="RasterWizard.set_out_ds"><a class="viewcode-back" href="../../wizard.html#helpers.RasterWizard.set_out_ds">[docs]</a>    <span class="k">def</span> <span class="nf">set_out_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="RasterWizard.set_out_ds"><a class="viewcode-back" href="../../wizard.html#helpers.RasterWizard.set_out_ds">[docs]</a>    <span class="k">def</span> <span class="nf">set_out_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">banddesc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set up a new output dataset for writing.</span>
 
 <span class="sd">        Only to be used directly when iterating over windows, see :py:meth:`.get_windows` for example.</span>
-<span class="sd">        Otherwise, the output is set in :py:meth`tolayer`.</span>
+<span class="sd">        Otherwise, the output is set in :py:meth:`.tolayer`.</span>
+
+<span class="sd">        With default values, the file is written to memory only and has the dtype matching the NumPy array.</span>
+
+<span class="sd">        .. versionchanged:: 1.5</span>
+<span class="sd">            It is now possible to set the band descriptions with the banddesc parameter. They show up in QGIS as &quot;Band 1: description&quot;.</span>
 
 <span class="sd">        :param filename: Filename or full file path for the output geotiff, default is None (in-memory only)</span>
 <span class="sd">        :type filename: str, optional</span>
@@ -474,6 +525,8 @@
 <span class="sd">        :type dtype: str, optional</span>
 <span class="sd">        :param nodata: No data value, default is None</span>
 <span class="sd">        :type nodata: int, optional</span>
+<span class="sd">        :param banddesc: List of band descriptions, default is None</span>
+<span class="sd">        :type banddesc: list of str, optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_out_nodata</span> <span class="o">=</span> <span class="n">nodata</span>
 
@@ -510,16 +563,27 @@
         <span class="n">dst_ds</span><span class="o">.</span><span class="n">SetGeoTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geotransform</span><span class="p">)</span>
         <span class="n">dst_ds</span><span class="o">.</span><span class="n">SetProjection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ds</span><span class="o">.</span><span class="n">GetProjection</span><span class="p">())</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_dst_ds</span> <span class="o">=</span> <span class="n">dst_ds</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dst_ds</span> <span class="o">=</span> <span class="n">dst_ds</span>
 
-<div class="viewcode-block" id="RasterWizard.tolayer"><a class="viewcode-back" href="../../wizard.html#helpers.RasterWizard.tolayer">[docs]</a>    <span class="k">def</span> <span class="nf">tolayer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Wizard&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bands_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Set band descriptions</span>
+        <span class="k">if</span> <span class="n">banddesc</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">banddesc</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bands</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">banddesc</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_dst_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">SetDescription</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">banddesc</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="RasterWizard.tolayer"><a class="viewcode-back" href="../../wizard.html#helpers.RasterWizard.tolayer">[docs]</a>    <span class="k">def</span> <span class="nf">tolayer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Wizard&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bands_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">banddesc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load a numpy array as a new raster layer in QGIS.</span>
+<span class="sd">        Save a numpy array as geotiff or in-memory and load it as a new raster layer in QGIS.</span>
 
 <span class="sd">        The array must have the same dimensions in x and y as the input layer. The number of bands and the datatype can be different.</span>
+<span class="sd">        By default, the datatype is inferred from the NumPy array.</span>
 <span class="sd">        First, the data is saved as geotiff if a filename (full file path) is given. Otherwise, the geotiff is in-memory only, using `GDAL &lt;https://gdal.org/en/latest/&gt;`_ virtual file system.</span>
 
 <span class="sd">        If iterating over windows, use :py:meth:`.write_window` and :py:meth:`.load_output` instead.</span>
+
+<span class="sd">        .. versionchanged:: 1.5</span>
+<span class="sd">            It is now possible to set the band descriptions with the banddesc parameter. They show up in QGIS as &quot;Band 1: description&quot;.</span>
 
 <span class="sd">        :param array: Numpy array with the raster data</span>
 <span class="sd">        :type array: numpy.ndarray</span>
@@ -537,6 +601,8 @@
 <span class="sd">        :type bands_last: bool, optional</span>
 <span class="sd">        :param nodata: No data value, default is None</span>
 <span class="sd">        :type nodata: int, optional</span>
+<span class="sd">        :param banddesc: List of band descriptions, default is None</span>
+<span class="sd">        :type banddesc: list of str, optional</span>
 <span class="sd">        :return: QgsRasterLayer instance of the new layer</span>
 <span class="sd">        :rtype: QgsRasterLayer</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -560,7 +626,7 @@
         <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
             <span class="n">dtype</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">dtype</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_out_ds</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="n">bands</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_out_ds</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="n">bands</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">banddesc</span><span class="o">=</span><span class="n">banddesc</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">bands</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dst_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
@@ -613,7 +679,7 @@
 <span class="sd">        The generated windows are instances of :py:class:`RasterWindow`. These do not contain the data, </span>
 <span class="sd">        only the pixel indices and sizes that are used internally to read and write the data with `GDAL &lt;https://gdal.org/en/latest/&gt;`_.</span>
 <span class="sd">        You can iterate over the generated windows, read the data with :py:meth:`.toarray` and write the data with :py:meth:`.write_window`.</span>
-<span class="sd">        The output dataset should be set first with set_out_ds(), otherwise a virtual in-memory file is used.</span>
+<span class="sd">        The output dataset should be set first with :py:class:`set_out_ds()`, otherwise a virtual in-memory file is used.</span>
 <span class="sd">        After processing all windows, the file is written and loaded back into QGIS with :py:meth:`load_output`.</span>
 
 <span class="sd">        Note that numpy, scipy etc. are very performant on large arrays. It is best to use a </span>
@@ -767,7 +833,8 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">helpers.wizard</a></li> 
       </ul>

@@ -5,7 +5,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>scipy_filters.algs.scipy_pca_algorithm &#8212; SciPyFilters 1.3 documentation</title>
+    <title>scipy_filters.algs.scipy_pca_algorithm &#8212; SciPyFilters 1.5
+ documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/classic.css" />
     
@@ -23,7 +24,8 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">scipy_filters.algs.scipy_pca_algorithm</a></li> 
       </ul>
@@ -81,6 +83,7 @@
                        <span class="n">QgsProcessingParameterEnum</span><span class="p">,</span>
                        <span class="n">QgsProcessingParameterDefinition</span><span class="p">,</span>
                        <span class="n">QgsProcessingParameterBoolean</span><span class="p">,</span>
+                       <span class="n">QgsProcessingParameterFileDestination</span>
                         <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">processing.core.ProcessingConfig</span> <span class="kn">import</span> <span class="n">ProcessingConfig</span>
@@ -88,6 +91,11 @@
 <span class="kn">from</span> <span class="nn">scipy_filters.scipy_algorithm_baseclasses</span> <span class="kn">import</span> <span class="n">groups</span>
 <span class="kn">from</span> <span class="nn">scipy_filters.helpers</span> <span class="kn">import</span> <span class="n">convert_docstring_to_html</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">MAXSIZE</span>
 
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="nn">go</span>
+    <span class="n">withplotly</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">withplotly</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="SciPyPCAAlgorithm"><a class="viewcode-back" href="../../../pca.html#scipy_filters.algs.scipy_pca_algorithm.SciPyPCAAlgorithm">[docs]</a><span class="k">class</span> <span class="nc">SciPyPCAAlgorithm</span><span class="p">(</span><span class="n">QgsProcessingAlgorithm</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -100,12 +108,17 @@
 <span class="sd">    *number of components* to keep or the *percentage of variance* </span>
 <span class="sd">    explained by the kept components can be set. </span>
 
+<span class="sd">    **Standard Scaler** Optionally scale each band to unit variance (std of 1) before performing PCA (std of each band is reported in the output). Otherwise, the absolute values of the scores will be in a similar range as the original data. (Added in version 1.5)</span>
+
 <span class="sd">    **Number of components** to keep. 0 for all components. If negative: </span>
 <span class="sd">    number of components to remove. </span>
 <span class="sd">    Ignored if percentage of variance is set.</span>
 
 <span class="sd">    **Percentage of variance to keep** is only used if it is greater than 0 </span>
 <span class="sd">    (typical values would be in the range between 90 and 100).</span>
+
+<span class="sd">    **Plot** If plotly is available, a plot of the variance explained by</span>
+<span class="sd">    the principal components is created and saved as HTML file.</span>
 
 <span class="sd">    **Output** The output raster contains </span>
 <span class="sd">    the data projected into the principal components </span>
@@ -126,6 +139,11 @@
 <span class="sd">    Loadings (eigenvectors scaled by sqrt(eigenvalues)),</span>
 <span class="sd">    Band Mean.</span>
 
+<span class="sd">    The plugin should give the same results as sklearn.decomposition.PCA</span>
+<span class="sd">    from `scikit-learn &lt;https://scikit-learn.org/&gt;`_: </span>
+<span class="sd">    &#39;singular values&#39; is `pca.singular_values_`</span>
+<span class="sd">    &#39;eigenvectors&#39; is `pca.components_`</span>
+<span class="sd">    &#39;variance explained&#39; is `pca.explained_variance_` in sklearn.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Constants used to refer to parameters and outputs. They will be</span>
@@ -133,7 +151,9 @@
     <span class="c1"># calling from the QGIS console.</span>
 
     <span class="n">OUTPUT</span> <span class="o">=</span> <span class="s1">&#39;OUTPUT&#39;</span>
+    <span class="n">PLOT</span> <span class="o">=</span> <span class="s1">&#39;PLOT&#39;</span>
     <span class="n">INPUT</span> <span class="o">=</span> <span class="s1">&#39;INPUT&#39;</span>
+    <span class="n">STANDARDSCALER</span> <span class="o">=</span> <span class="s1">&#39;STANDARDSCALER&#39;</span>
     <span class="n">NCOMPONENTS</span> <span class="o">=</span> <span class="s1">&#39;NCOMPONENTS&#39;</span>
     <span class="n">PERCENTVARIANCE</span> <span class="o">=</span> <span class="s1">&#39;PERCENTVARIANCE&#39;</span>
     <span class="n">DTYPE</span> <span class="o">=</span> <span class="s1">&#39;DTYPE&#39;</span>
@@ -162,6 +182,13 @@
                 <span class="n">tr</span><span class="p">(</span><span class="s1">&#39;Input layer&#39;</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">QgsProcessingParameterBoolean</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">STANDARDSCALER</span><span class="p">,</span>
+            <span class="n">tr</span><span class="p">(</span><span class="s1">&#39;Standard Scaler: Scale each band to unit variance (std of 1) before PCA&#39;</span><span class="p">),</span>
+            <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">defaultValue</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">))</span>
 
 
         <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">QgsProcessingParameterNumber</span><span class="p">(</span>
@@ -208,6 +235,13 @@
         <span class="n">dtype_param</span><span class="o">.</span><span class="n">setFlags</span><span class="p">(</span><span class="n">dtype_param</span><span class="o">.</span><span class="n">flags</span><span class="p">()</span> <span class="o">|</span> <span class="n">QgsProcessingParameterDefinition</span><span class="o">.</span><span class="n">Flag</span><span class="o">.</span><span class="n">FlagAdvanced</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">dtype_param</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">withplotly</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">QgsProcessingParameterFileDestination</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">PLOT</span><span class="p">,</span>
+                <span class="n">tr</span><span class="p">(</span><span class="s1">&#39;Plot of Variance Explained (PCA)&#39;</span><span class="p">),</span>
+                <span class="n">tr</span><span class="p">(</span><span class="s1">&#39;HTML files (*.html)&#39;</span><span class="p">),</span>
+            <span class="p">))</span>
+
 
         <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span>
             <span class="n">QgsProcessingParameterRasterDestination</span><span class="p">(</span>
@@ -223,6 +257,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">inputlayer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsRasterLayer</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">INPUT</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_raster</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsOutputLayer</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">OUTPUT</span><span class="p">,</span><span class="n">context</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">standardscaler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsBool</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">STANDARDSCALER</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ncomponents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsInt</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">NCOMPONENTS</span><span class="p">,</span><span class="n">context</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">percentvariance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsDouble</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PERCENTVARIANCE</span><span class="p">,</span><span class="n">context</span><span class="p">)</span>
 
@@ -273,6 +308,15 @@
         <span class="n">centered</span> <span class="o">=</span> <span class="n">flattened</span> <span class="o">-</span> <span class="n">col_mean</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
 
         <span class="n">flattened</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Eventually scale each band to unit variance (std of 1) </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">standardscaler</span><span class="p">:</span>
+            <span class="n">col_std</span> <span class="o">=</span> <span class="n">centered</span><span class="p">[</span><span class="o">~</span><span class="n">nodata_mask</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">centered</span> <span class="o">=</span> <span class="n">centered</span> <span class="o">/</span> <span class="n">col_std</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">feedback</span><span class="o">.</span><span class="n">setProgress</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">feedback</span><span class="o">.</span><span class="n">isCanceled</span><span class="p">():</span>
+            <span class="k">return</span> <span class="p">{}</span>
 
         <span class="c1"># Get eigenvectors, eigenvalues, loadings with SVD</span>
 
@@ -330,6 +374,10 @@
         <span class="n">feedback</span><span class="o">.</span><span class="n">pushInfo</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">loadings</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
         <span class="n">feedback</span><span class="o">.</span><span class="n">pushInfo</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Band Mean:&quot;</span><span class="p">)</span>
         <span class="n">feedback</span><span class="o">.</span><span class="n">pushInfo</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">col_mean</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">standardscaler</span><span class="p">:</span>
+            <span class="n">feedback</span><span class="o">.</span><span class="n">pushInfo</span><span class="p">(</span><span class="s2">&quot;Standard deviation of each band:&quot;</span><span class="p">)</span>
+            <span class="n">feedback</span><span class="o">.</span><span class="n">pushInfo</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">col_std</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="n">feedback</span><span class="o">.</span><span class="n">setProgress</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">feedback</span><span class="o">.</span><span class="n">isCanceled</span><span class="p">():</span>
             <span class="k">return</span> <span class="p">{}</span>
@@ -374,7 +422,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">out_ds</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="n">new_array</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">bands</span><span class="p">,:,:])</span>   
 
         <span class="c1"># Set no data value</span>
-        <span class="k">if</span> <span class="n">nodatavalue</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">nodatavalue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">bands</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">out_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">SetNoDataValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NODATA</span><span class="p">)</span>
 
@@ -400,7 +448,7 @@
         <span class="n">new_array</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Save loadings etc as json in the metadata abstract of the layer</span>
-        <span class="n">encoded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+        <span class="n">json_dict</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s1">&#39;singular values&#39;</span><span class="p">:</span> <span class="n">S</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
                 <span class="s1">&#39;eigenvectors&#39;</span><span class="p">:</span> <span class="n">VT</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
                 <span class="s1">&#39;loadings&#39;</span><span class="p">:</span> <span class="n">loadings</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
@@ -408,16 +456,19 @@
                 <span class="s1">&#39;variance_ratio&#39;</span><span class="p">:</span> <span class="n">variance_ratio</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
                 <span class="s1">&#39;variance explained cumsum&#39;</span><span class="p">:</span> <span class="n">variance_explained_cumsum</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
                 <span class="s1">&#39;band mean&#39;</span><span class="p">:</span> <span class="n">col_mean</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-                <span class="p">})</span>
+                <span class="p">}</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">standardscaler</span><span class="p">:</span>
+            <span class="n">json_dict</span><span class="p">[</span><span class="s1">&#39;band std&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_std</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="n">encoded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 
         
         <span class="k">global</span> <span class="n">updatemetadata</span>
         <span class="n">updatemetadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span>
         <span class="n">context</span><span class="o">.</span><span class="n">layerToLoadOnCompletionDetails</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_raster</span><span class="p">)</span><span class="o">.</span><span class="n">setPostProcessor</span><span class="p">(</span><span class="n">updatemetadata</span><span class="p">)</span>
 
-        <span class="n">feedback</span><span class="o">.</span><span class="n">setProgress</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">OUTPUT</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_raster</span><span class="p">,</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">OUTPUT</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_raster</span><span class="p">,</span>
                 <span class="s1">&#39;singular values&#39;</span><span class="p">:</span> <span class="n">S</span><span class="p">,</span>
                 <span class="s1">&#39;loadings&#39;</span><span class="p">:</span> <span class="n">loadings</span><span class="p">,</span>
                 <span class="s1">&#39;variance explained&#39;</span><span class="p">:</span> <span class="n">variance_explained</span><span class="p">,</span>
@@ -426,10 +477,28 @@
                 <span class="s1">&#39;band mean&#39;</span><span class="p">:</span> <span class="n">col_mean</span><span class="p">,</span>
                 <span class="s1">&#39;eigenvectors&#39;</span><span class="p">:</span> <span class="n">VT</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
                 <span class="s1">&#39;json&#39;</span><span class="p">:</span> <span class="n">encoded</span><span class="p">}</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">standardscaler</span><span class="p">:</span>
+            <span class="n">output</span><span class="p">[</span><span class="s1">&#39;band std&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_std</span>
+
+        <span class="k">if</span> <span class="n">withplotly</span><span class="p">:</span>
+            <span class="n">feedback</span><span class="o">.</span><span class="n">setProgress</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>
+            <span class="n">html_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsFileOutput</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PLOT</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>  
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_pca_variance</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">,</span> <span class="n">variance_explained_cumsum</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">html_file</span><span class="p">)</span>
+            <span class="n">output</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">PLOT</span><span class="p">]</span> <span class="o">=</span> <span class="n">html_file</span>
+
+        <span class="n">feedback</span><span class="o">.</span><span class="n">setProgress</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span>
 
 
     <span class="k">def</span> <span class="nf">checkParameterValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsRasterLayer</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">INPUT</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;gdal&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Raster provider </span><span class="si">{}</span><span class="s2"> is not supported, must be raster layer with a local file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()))</span>
+        
         <span class="c1"># Check maxsize</span>
         <span class="n">size</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">/</span> <span class="mi">1000000</span> <span class="c1"># megapixels</span>
         <span class="k">if</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span><span class="p">:</span>
@@ -505,6 +574,47 @@
     <span class="k">def</span> <span class="nf">createInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">SciPyPCAAlgorithm</span><span class="p">()</span>  </div>
     
+
+<span class="k">def</span> <span class="nf">plot_pca_variance</span><span class="p">(</span><span class="n">ratio_variance_explained</span><span class="p">,</span> <span class="n">cumsum_variance_explained</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the variance explained by the principal components.</span>
+
+<span class="sd">    Requires plotly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratio_variance_explained</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span>
+        <span class="n">layout_title_text</span><span class="o">=</span><span class="s2">&quot;Variance Explained&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">ratio_variance_explained</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Fraction of Variance Explained&#39;</span><span class="p">,</span>
+        <span class="n">hovertemplate</span><span class="o">=</span><span class="s1">&#39;Component %</span><span class="si">{x}</span><span class="s1">&lt;br&gt;%</span><span class="si">{y:.5f}</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines+markers&#39;</span>
+    <span class="p">))</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">cumsum_variance_explained</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cumulated Sum of Variance Explained&#39;</span><span class="p">,</span>
+        <span class="n">hovertemplate</span><span class="o">=</span><span class="s1">&#39;Component %</span><span class="si">{x}</span><span class="s1">&lt;br&gt;%</span><span class="si">{y:.5f}</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines+markers&#39;</span><span class="p">,</span>
+        <span class="n">visible</span><span class="o">=</span><span class="s1">&#39;legendonly&#39;</span><span class="p">,</span>
+    <span class="p">))</span>
+                
+    <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Variance Explained by Principal Components&#39;</span><span class="p">,</span>
+        <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Principal Component&quot;</span><span class="p">,</span>
+        <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Fraction of Variance Explained&quot;</span><span class="p">,</span>
+        <span class="n">xaxis_dtick</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+    
 </pre></div>
 
             <div class="clearer"></div>
@@ -533,7 +643,8 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">scipy_filters.algs.scipy_pca_algorithm</a></li> 
       </ul>

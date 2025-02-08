@@ -5,7 +5,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>scipy_filters.algs.scipy_nodata_algorithm &#8212; SciPyFilters 1.3 documentation</title>
+    <title>scipy_filters.algs.scipy_nodata_algorithm &#8212; SciPyFilters 1.5
+ documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/classic.css" />
     
@@ -23,7 +24,8 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">scipy_filters.algs.scipy_nodata_algorithm</a></li> 
       </ul>
@@ -160,6 +162,10 @@
         <span class="n">feedback</span><span class="o">.</span><span class="n">setProgress</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gdal&quot;</span><span class="p">:</span>
+            <span class="n">feedback</span><span class="o">.</span><span class="n">reportError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Raster provider </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span><span class="si">}</span><span class="s2"> is not supported, must be raster layer with a local file&quot;</span><span class="p">,</span> <span class="n">fatalError</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">source</span><span class="p">())</span>
 
@@ -364,6 +370,12 @@
 
         <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">bandCount</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">mask</span><span class="o">.</span><span class="n">bandCount</span><span class="p">()</span> <span class="o">!=</span> <span class="n">inputlayer</span><span class="o">.</span><span class="n">bandCount</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Mask layer must have 1 band or same number of bands as input&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gdal&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Raster provider </span><span class="si">{}</span><span class="s2"> is not supported, must be raster layer with a local file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()))</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mask</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gdal&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Mask: provider </span><span class="si">{}</span><span class="s2"> is not supported, must be raster layer with a local file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()))</span>
 
         <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">source</span><span class="p">())</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ds</span><span class="p">:</span>
@@ -599,6 +611,9 @@
         <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsInt</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">MODE</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
         <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterAsDouble</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">VALUE</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gdal&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Raster provider </span><span class="si">{}</span><span class="s2"> is not supported, must be raster layer with a local file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">providerType</span><span class="p">()))</span>
+
         <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">inputlayer</span><span class="o">.</span><span class="n">source</span><span class="p">())</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ds</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Failed to open Raster Layer&quot;</span><span class="p">)</span>
@@ -792,7 +807,8 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SciPyFilters 1.5
+ documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">scipy_filters.algs.scipy_nodata_algorithm</a></li> 
       </ul>
